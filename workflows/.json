@@ -1,0 +1,961 @@
+{
+  "updatedAt": "2026-07-14T06:49:22.658Z",
+  "createdAt": "2026-07-09T05:51:58.648Z",
+  "id": "aOsmzhS8fI8oWIu6",
+  "name": "爆款复刻",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dd4f3a09-5472-475d-acde-53db5580f328",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "11d543ca-5a56-42c9-8e1d-94c7dcbeeabe",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1392,
+        384
+      ],
+      "webhookId": "62556e76-52d0-4677-9037-4256b2ad4fe8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "faef2afd-645e-4f55-a768-ec8c6b888350",
+              "name": "text",
+              "value": "={{ $('Webhook').item.json.body.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "465bd7b3-dab0-474b-b2e6-e734b50015f0",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {}
+      },
+      "id": "df234405-1c4b-4e83-9219-0fc1eea53546",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+        "options": {
+          "format": "jpeg",
+          "quality": 80
+        }
+      },
+      "id": "d3e9c338-ece5-46f6-bd9c-3e6497466c99",
+      "name": "Edit Image",
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "baby",
+        "options": {
+          "includeBinaries": true,
+          "keepOnlyUnique": false
+        }
+      },
+      "id": "6fc5a5a7-ac7e-4f3f-b026-e9ca4703b0c5",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        16,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dc6395f7-324b-4dda-a928-e617a0456498",
+              "name": "ckimage",
+              "value": "={{ $json.baby[0].ckimage }}",
+              "type": "string"
+            },
+            {
+              "id": "782eb2df-6095-43d1-b04e-62cbe8968ccc",
+              "name": "cpimage",
+              "value": "={{ $json.baby[1].cpimage }}",
+              "type": "string"
+            },
+            {
+              "id": "745c2226-143d-47d0-92be-d24c4327ea49",
+              "name": "text",
+              "value": "={{ $('Edit Fields').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5ad04663-73c3-4d6c-9b40-8aea4ea7e41b",
+              "name": "size",
+              "value": "={{ \n  (function() {\n    const size = $('Edit Image1').item.json.Geometry || '1024x1024';\n    const parts = size.split('x');\n    const w = parseInt(parts[0]);\n    const h = parseInt(parts[1]);\n    const ratio = w / h;\n    \n    const ratios = {\n      '1:1': 1,\n      '16:9': 16/9,\n      '2:3': 2/3,\n      '21:9': 21/9,\n      '3:2': 3/2,\n      '3:4': 3/4,\n      '4:3': 4/3,\n      '4:5': 4/5,\n      '5:4': 5/4,\n      '9:16': 9/16\n    };\n    \n    let closest = '1:1';\n    let minDiff = Infinity;\n    for (const [key, val] of Object.entries(ratios)) {\n      const diff = Math.abs(ratio - val);\n      if (diff < minDiff) {\n        minDiff = diff;\n        closest = key;\n      }\n    }\n    return closest;\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "574b5543-abd4-449f-8bc0-58643aa50a95",
+              "name": "cpimage0",
+              "value": "={{ $json.baby[1].cpimage0 }}",
+              "type": "string"
+            },
+            {
+              "id": "e1b3cb52-ef18-4a32-b31e-153b794d6ec0",
+              "name": "cpimage1",
+              "value": "={{ $json.baby[2].cpimage1 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7c85455c-fee6-45ba-89d9-7782dcc35ce6",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const size = $input.first().json.size || '1:1';\n\nconst systemPrompt = `你是专业Ideogram4结构化JSON提示词生成器，必须100%严格遵守以下全套强制规范，任何输出JSON不能违反任意一条规则，违规即判定不合格：\n\n## 一、顶层固定字段结构（强制）\n完整JSON顶层键固定顺序：canvas_ratio（必填）→ high_level_description → style_description → compositional_deconstruction\n1. canvas_ratio：画布比例为：${size}\n无用户指定画布比例时，默认自动填充 \"${size}\"。\n\n2. high_level_description：选填、强烈推荐，1-2句英文概括整张画面；\n3. style_description：选填，控制画面风格光影镜头配色；\n4. compositional_deconstruction：强制必填，不可缺失；内部必须同时包含background（在前）、elements（在后）两个子key，顺序不能调换。\n\n## 二、style_description 强制字段顺序（严格固定，不可调换）\n分两种画面类型，二选一，禁止同时出现photo与art_style：\n1. 摄影写实画面（medium=\"photograph\"）固定顺序：\naesthetics → lighting → photo → medium → color_palette\n2. 插画/3D/设计画面（非摄影）固定顺序：\naesthetics → lighting → medium → art_style → color_palette\n### 子字段强制要求\n1. aesthetics：必填，使用模板标准美学英文关键词；\n2. lighting：必填，复用参考文档标准光影术语；\n3. photo/art_style：二选一必填，摄影用photo写镜头参数，插画用art_style写画风；\n4. medium：必填，可选值 photograph / illustration / 3d_render / painting / graphic_design；\n5. color_palette：可选，有则必须放在该模块最后一位；仅大写#RRGGBB十六进制色号，最多16个，禁止简写#fff、小写#aaaaaa、纯文字色彩描述。\n\n## 三、compositional_deconstruction.elements 元素统一标准（强制）\nelements为数组列表，画面分层书写顺序硬性规则：顶层文字面板元素写在数组最前面、居中核心产品obj居中放置、底部装饰小物体全部后置；排布坐标区间根据canvas_ratio自定义长宽数值自动适配画布拉伸逻辑。\n### 两种元素类型固定字段顺序，一字不差\n1. 普通物体 type:\"obj\" 固定顺序：\ntype → bbox → desc → color_palette（可选，有则放末尾）\n2. 画面文字 type:\"text\" 固定顺序：\ntype → bbox → text → desc → color_palette（可选，有则放末尾）\n### bbox 坐标全局统一规范\n格式固定数组 [y_min, x_min, y_max, x_max]，归一化区间固定 0 ≤ 所有数值 ≤ 1000 整数，坐标格式、取值范围不随自定义画布比例改变；仅元素横向/纵向分配逻辑跟随比例数值调整：\n- 竖版比例（y数值更大，如9:16、2:3）：纵向y轴留白充足，主体上下延展；\n- 方形比例（xy数值相等，如1:1）：x、y轴空间均等，元素对称居中；\n- 横版比例（x数值更大，如16:9、21:9）：横向x轴空间充足，支持多元素左右并排。\n### color_palette统一约束\n全局style调色板最多16个色值；单个element内部调色板最多5个色值；全部仅大写#RRGGBB，禁止任何文字色彩描述。\n\n## 四、摄影镜头参数术语强制复用模板原文写法\n所有摄影画面photo字段只能使用参考文档标准术语，不可自创描述：\nshallow depth of field, sharp focus, eye-level, telephoto, wide angle, 85mm, 35mm, f/1.4, f/8, bokeh, long exposure, rule of thirds，镜头焦段、光圈、景深、拍摄角度术语严格对齐示例模板。\n\n## 五、JSON序列化输出硬性格式\n1. 所有key名称严格和规范一致，不能简写、改名、新增无关key；顶层顺序严格：canvas_ratio → high_level_description → style_description → compositional_deconstruction\n2. 所有子字段键顺序严格遵循上文规定，不可乱序；\n3. 输出标准纯JSON，无注释、无多余说明文字；色值全部大写#RRGGBB；\n4. 禁止出现小写十六进制、简写色号、中文色彩描述；\n5. bbox数组仅整数，0~1000区间，格式 [y_min, x_min, y_max, x_max]。\n\n## 六、附加约束\n1. 禁止生成NSFW违规内容，会触发安全过滤；\n2. 所有画面描述统一使用英文，贴合Ideogram4训练数据风格；\n3. 若用户无指定配色，可省略color_palette字段；若要求配色必须严格遵守色号格式；\n4. 未指定位置可省略bbox；需要精准分层构图必须补充规范bbox坐标，并适配当前自定义canvas_ratio长宽逻辑；\n5. canvas_ratio输入格式不规范时，自动回落默认值\"1:1\"。\n6.禁止客套可问候语，无多余注释、无额外说明，直接输出json提示词`;\n\nconst userText = $input.first().json.text || '';\nconst ckimageBase64 = $input.first().json.ckimage || '';\nconst requestBody = {\n  system_instruction: { parts: [{ text: systemPrompt }] },\n  contents: [{ role: 'user', parts: [{ text: userText }, { inline_data: { mime_type: 'image/jpeg', data: ckimageBase64 } }] }]\n};\nreturn [{ json: requestBody }];"
+      },
+      "id": "f4fc060a-e413-49b2-aa02-6bd8f67987ba",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": []
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-goog-api-key",
+              "value": "AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "1905027d-846e-4789-b7e1-c62249bf3706",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "=将图1产品融入如下场景中{{ $('Edit Fields3').item.json.text }}",
+        "referenceImages": "=cpimage ",
+        "aspectRatio": "={{ $('Edit Fields1').item.json.size }}",
+        "resolution": "2K",
+        "outputPropertyName": "上路",
+        "options": {}
+      },
+      "id": "cba19adb-0882-4987-a0b1-e09b468348fe",
+      "name": "Nano Banana1",
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        0
+      ],
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+        "destinationKey": "={{ Object.keys($input.item.binary).join(',') }}",
+        "options": {}
+      },
+      "id": "3ef96ad7-20ea-4722-b38f-7ddaaa1321b0",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "47e1a101-372f-4679-bd70-5cc0ac60b82e",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.5-flash"
+        },
+        "text": "=你是专业Ideogram4结构化JSON提示词生成器，必须100%严格遵守以下全套强制规范，任何输出JSON不能违反任意一条规则，违规即判定不合格：\n\n## 一、顶层固定字段结构（强制）\n完整JSON顶层键固定顺序：canvas_ratio（必填）→ high_level_description → style_description → compositional_deconstruction\n1. canvas_ratio：画布比例为：{{ $('Edit Fields1').item.json.size }}\n无用户指定画布比例时，默认自动填充 \"1:1\"。\n\n2. high_level_description：选填、强烈推荐，1-2句英文概括整张画面；\n3. style_description：选填，控制画面风格光影镜头配色；\n4. compositional_deconstruction：强制必填，不可缺失；内部必须同时包含background（在前）、elements（在后）两个子key，顺序不能调换。\n\n## 二、style_description 强制字段顺序（严格固定，不可调换）\n分两种画面类型，二选一，禁止同时出现photo与art_style：\n1. 摄影写实画面（medium=\"photograph\"）固定顺序：\naesthetics → lighting → photo → medium → color_palette\n2. 插画/3D/设计画面（非摄影）固定顺序：\naesthetics → lighting → medium → art_style → color_palette\n### 子字段强制要求\n1. aesthetics：必填，使用模板标准美学英文关键词；\n2. lighting：必填，复用参考文档标准光影术语；\n3. photo/art_style：二选一必填，摄影用photo写镜头参数，插画用art_style写画风；\n4. medium：必填，可选值 photograph / illustration / 3d_render / painting / graphic_design；\n5. color_palette：可选，有则必须放在该模块最后一位；仅大写#RRGGBB十六进制色号，最多16个，禁止简写#fff、小写#aaaaaa、纯文字色彩描述。\n\n## 三、compositional_deconstruction.elements 元素统一标准（强制）\nelements为数组列表，画面分层书写顺序硬性规则：顶层文字面板元素写在数组最前面、居中核心产品obj居中放置、底部装饰小物体全部后置；排布坐标区间根据canvas_ratio自定义长宽数值自动适配画布拉伸逻辑。\n### 两种元素类型固定字段顺序，一字不差\n1. 普通物体 type:\"obj\" 固定顺序：\ntype → bbox → desc → color_palette（可选，有则放末尾）\n2. 画面文字 type:\"text\" 固定顺序：\ntype → bbox → text → desc → color_palette（可选，有则放末尾）\n### bbox 坐标全局统一规范\n格式固定数组 [y_min, x_min, y_max, x_max]，归一化区间固定 0 ≤ 所有数值 ≤ 1000 整数，坐标格式、取值范围不随自定义画布比例改变；仅元素横向/纵向分配逻辑跟随比例数值调整：\n- 竖版比例（y数值更大，如9:16、2:3）：纵向y轴留白充足，主体上下延展；\n- 方形比例（xy数值相等，如1:1）：x、y轴空间均等，元素对称居中；\n- 横版比例（x数值更大，如16:9、21:9）：横向x轴空间充足，支持多元素左右并排。\n### color_palette统一约束\n全局style调色板最多16个色值；单个element内部调色板最多5个色值；全部仅大写#RRGGBB，禁止任何文字色彩描述。\n\n## 四、摄影镜头参数术语强制复用模板原文写法\n所有摄影画面photo字段只能使用参考文档标准术语，不可自创描述：\nshallow depth of field, sharp focus, eye-level, telephoto, wide angle, 85mm, 35mm, f/1.4, f/8, bokeh, long exposure, rule of thirds，镜头焦段、光圈、景深、拍摄角度术语严格对齐示例模板。\n\n## 五、JSON序列化输出硬性格式\n1. 所有key名称严格和规范一致，不能简写、改名、新增无关key；顶层顺序严格：canvas_ratio → high_level_description → style_description → compositional_deconstruction\n2. 所有子字段键顺序严格遵循上文规定，不可乱序；\n3. 输出标准纯JSON，无注释、无多余说明文字；色值全部大写#RRGGBB；\n4. 禁止出现小写十六进制、简写色号、中文色彩描述；\n5. bbox数组仅整数，0~1000区间，格式 [y_min, x_min, y_max, x_max]。\n\n## 六、附加约束\n1. 禁止生成NSFW违规内容，会触发安全过滤；\n2. 所有画面描述统一使用英文，贴合Ideogram4训练数据风格；\n3. 若用户无指定配色，可省略color_palette字段；若要求配色必须严格遵守色号格式；\n4. 未指定位置可省略bbox；需要精准分层构图必须补充规范bbox坐标，并适配当前自定义canvas_ratio长宽逻辑；\n5. canvas_ratio输入格式不规范时，自动回落默认值\"1:1\"。\n6.禁止客套可问候语，无多余注释、无额外说明，直接输出json提示词",
+        "inputType": "binary",
+        "binaryPropertyName": "ckimage",
+        "options": {}
+      },
+      "id": "ebcc8b5f-d812-4bf4-95e0-b99fbaf8a405",
+      "name": "Analyze an image",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        272
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "af5dfe3c-c7bd-4012-bc40-c1a012b0a37c",
+              "name": "text",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "8288ac79-7ea3-4783-850d-a34198b0ba65",
+              "name": "cpimage",
+              "value": "={{ $('Edit Fields1').item.json.cpimage }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a67d8142-b119-40da-a557-126f63634e8a",
+      "name": "Edit Fields2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "ckimage",
+        "binaryPropertyName": "ckimage",
+        "options": {}
+      },
+      "id": "c26327ac-e9d0-4a20-a3fb-7edb47fcff60",
+      "name": "Convert to File",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {}
+      },
+      "id": "65d27c99-8070-485d-867c-76e86d22e9ed",
+      "name": "Respond to Webhook1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2944,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "=将图1产品融入如下场景中 {{ $('Edit Fields2').item.json.text }}",
+        "referenceImages": "cpimage",
+        "aspectRatio": "={{ $('Edit Fields1').item.json.size }}",
+        "outputPropertyName": "下路",
+        "options": {}
+      },
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        272
+      ],
+      "id": "e0fb7ee6-2f2f-4f42-894d-5a90d3e5fb3f",
+      "name": "Nano Banana",
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        0
+      ],
+      "id": "790e46ff-5766-4131-9adb-e362a13afd61",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "cpimage",
+        "binaryPropertyName": "cpimage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        272
+      ],
+      "id": "c2ad2d71-9b75-40dd-bbf8-15ea89876ac1",
+      "name": "Convert to File2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb4466a3-0623-4606-814a-59c1defd1859",
+              "name": "text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "208af5e3-da69-4acd-ae89-e4f4f3bd494f",
+              "name": "cpimage",
+              "value": "={{ $('Edit Fields1').item.json.cpimage }}",
+              "type": "string"
+            },
+            {
+              "id": "43cf7c31-5e68-4700-9448-bd8a568529d8",
+              "name": "size",
+              "value": "={{ $('Edit Fields1').item.json.size }}",
+              "type": "string"
+            },
+            {
+              "id": "5183a65e-1e7e-4751-9bde-5d733afb0a54",
+              "name": "cpimage0",
+              "value": "={{ $('Edit Fields1').item.json.cpimage0 }}",
+              "type": "string"
+            },
+            {
+              "id": "1caf9889-568a-4be2-aa32-2d2ed5bae8d9",
+              "name": "cpimage1",
+              "value": "={{ $('Edit Fields1').item.json.cpimage1 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        0
+      ],
+      "id": "a8d58af9-07f5-4336-99ee-81492380ac45",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "cpimage",
+        "binaryPropertyName": "cpimage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1104,
+        0
+      ],
+      "id": "591a4ef8-ed86-4b0f-bcbf-a99dca29bf0d",
+      "name": "Convert to File3"
+    },
+    {
+      "parameters": {
+        "operation": "information",
+        "dataPropertyName": "ckimage"
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        384
+      ],
+      "id": "92601612-aebc-4927-966d-11a46cad5567",
+      "name": "Edit Image1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "ckimage",
+        "binaryPropertyName": "ckimage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        784
+      ],
+      "id": "96532fbd-f860-4f61-a7fc-8f4a4aa6e500",
+      "name": "Convert to File4",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2656,
+        0
+      ],
+      "id": "be21d5d7-f5b9-47f1-9bc1-30f481fafe97",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-5.5-pro-2026-04-23",
+          "mode": "list",
+          "cachedResultName": "GPT-5.5-PRO-2026-04-23"
+        },
+        "text": "=你是专业Ideogram4结构化JSON提示词生成器，必须100%严格遵守以下全套强制规范，任何输出JSON不能违反任意一条规则，违规即判定不合格：\n\n## 一、顶层固定三字段结构（强制）\n完整JSON仅允许包含3个顶层key，优先级&存在要求：\n1. high_level_description：选填、强烈推荐，1-2句概括整张画面；\n2. style_description：选填，控制画面风格光影镜头配色；\n3. compositional_deconstruction：**强制必填**，不可缺失；内部必须同时包含background（在前）、elements（在后）两个子key，顺序不能调换。\n\n## 二、style_description 强制字段顺序（严格固定，不可调换）\n分两种画面类型，二选一，禁止同时出现photo与art_style：\n1. 摄影写实画面（medium=\"photograph\"）固定顺序：\naesthetics → lighting → photo → medium → color_palette\n2. 插画/3D/设计画面（非摄影）固定顺序：\naesthetics → lighting → medium → art_style → color_palette\n### 子字段强制要求\n1. aesthetics：必填，使用模板标准美学英文关键词；\n2. lighting：必填，复用参考文档标准光影术语；\n3. photo/art_style：二选一必填，摄影用photo写镜头参数，插画用art_style写画风；\n4. medium：必填，可选值 photograph / illustration / 3d_render / painting / graphic_design；\n5. color_palette：可选，有则必须放在该模块最后一位；仅大写#RRGGBB十六进制色号，最多16个，禁止简写#fff、小写#aaaaaa、纯文字色彩描述。\n\n## 三、compositional_deconstruction.elements 元素统一标准（强制）\nelements为数组列表，画面分层书写顺序硬性规则：顶层文字面板元素写在数组最前面、居中核心产品obj居中放置、底部装饰小物体全部后置。\n### 两种元素类型固定字段顺序，一字不差\n1. 普通物体 type:\"obj\" 固定顺序：\ntype → bbox → desc → color_palette（可选，有则放末尾）\n2. 画面文字 type:\"text\" 固定顺序：\ntype → bbox → text → desc → color_palette（可选，有则放末尾）\n### bbox 坐标强制规范\n格式固定数组 [y_min, x_min, y_max, x_max]，画布归一化区间0~1000，适配9:16竖版构图，所有数值仅0-1000整数，不可超出区间。\n### color_palette统一约束\n全局style调色板最多16个色值；单个element内部调色板最多5个色值；全部仅大写#RRGGBB，禁止任何文字色彩描述。\n\n## 四、摄影镜头参数术语强制复用模板原文写法\n所有摄影画面photo字段只能使用参考文档标准术语，不可自创描述：\nshallow depth of field, sharp focus, eye-level, telephoto, wide angle, 85mm, 35mm, f/1.4, f/8, bokeh, long exposure, rule of thirds，镜头焦段、光圈、景深、拍摄角度术语严格对齐示例模板。\n\n## 五、JSON序列化输出硬性格式\n1. 所有key名称严格和规范一致，不能简写、改名、新增无关key；\n2. 所有字段键顺序严格遵循上文规定，不可乱序；\n3. 输出标准JSON结构，色值全部大写#RRGGBB；\n4. 禁止出现小写十六进制、简写色号、中文色彩描述；\n5. 无多余注释、无额外说明，仅输出纯标准JSON字符串。\n\n## 六、附加约束\n1. 禁止生成NSFW违规内容，会触发安全过滤；\n2. 所有文字描述统一使用英文，贴合Ideogram4训练数据风格；\n3. 若用户无指定配色，可省略color_palette字段；若要求配色必须严格遵守色号格式；\n4. 若用户未指定空间位置，可省略bbox字段；需要分层构图时必须补充规范bbox坐标。",
+        "inputType": "base64",
+        "binaryPropertyName": "ckimage",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        784
+      ],
+      "id": "956e595b-c0f3-4754-b592-48c6aa2c3eb2",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "cZ6o5Pu0ywIAcNud",
+          "name": "gpt"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e013a730-5eec-4e5e-8522-af25a0a67259",
+              "name": "prompt",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "317e2ae8-3b83-41b2-ba3f-bd2effbb6de6",
+              "name": "cpimage",
+              "value": "={{ $('Edit Fields1').item.json.cpimage }}",
+              "type": "string"
+            },
+            {
+              "id": "5a3f26b9-58f8-492d-8ad8-eda52fe74d0e",
+              "name": "text",
+              "value": "={{ $('Edit Fields1').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "af547880-6fa5-4704-bf0b-7bf63ddbb94b",
+              "name": "size",
+              "value": "={{ \n  (function() {\n    const geo = $('Edit Image1').item.json.Geometry || '1024x1024';\n    const parts = geo.split('x');\n    let w = parseInt(parts[0]);\n    let h = parseInt(parts[1]);\n    \n    // 如果最小边小于768，按比例放大\n    const min = Math.min(w, h);\n    if (min < 768) {\n      const scale = 768 / min;\n      w = Math.round(w * scale);\n      h = Math.round(h * scale);\n    }\n    \n    // 四舍五入到64的倍数\n    w = Math.round(w / 64) * 64;\n    h = Math.round(h / 64) * 64;\n    \n    return w + 'x' + h;\n  })()\n}}",
+              "type": "string"
+            },
+            {
+              "id": "3b4b6bfb-9213-4104-bfbe-a967f894670c",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        784
+      ],
+      "id": "98bccdc3-c51b-47b2-855b-22eedcf93e54",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "=cpimage",
+        "binaryPropertyName": "cpimage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        784
+      ],
+      "id": "36bb91d1-a571-493b-9e28-ca4e9926cc93",
+      "name": "Convert to File6"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-image-2-2026-04-21",
+          "mode": "list",
+          "cachedResultName": "GPT-IMAGE-2-2026-04-21"
+        },
+        "prompt": "=将图1产品融入如下场景中 {{ $('Edit Fields5').item.json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "cpimage"
+            }
+          ]
+        },
+        "size": "={{ $('Edit Fields5').item.json.size }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        784
+      ],
+      "id": "72609155-1e7d-40fb-ae01-e0651b372348",
+      "name": "Edit image",
+      "credentials": {
+        "openAiApi": {
+          "id": "cZ6o5Pu0ywIAcNud",
+          "name": "gpt"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze an image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Analyze an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File2": {
+      "main": [
+        [
+          {
+            "node": "Nano Banana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Convert to File3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File3": {
+      "main": [
+        [
+          {
+            "node": "Nano Banana1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File4": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Convert to File6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File6": {
+      "main": [
+        [
+          {
+            "node": "Edit image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "18f68df6-7f4c-4ebe-8b78-e30021e75db2",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-09T05:51:58.648Z",
+      "createdAt": "2026-07-09T05:51:58.648Z",
+      "role": "workflow:owner",
+      "workflowId": "aOsmzhS8fI8oWIu6",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
