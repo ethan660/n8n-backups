@@ -1,0 +1,98 @@
+{
+  "updatedAt": "2026-05-26T09:30:41.594Z",
+  "createdAt": "2026-05-26T01:16:02.207Z",
+  "id": "kUX8yxjBIfbKArOl",
+  "name": "My workflow 6",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "eed92cac-154c-4e96-8cb7-1b2f8fdcc135",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.surces.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "User-Agent",
+              "value": "Apifox/1.0.0 (https://apifox.com)"
+            },
+            {
+              "name": "Accept",
+              "value": "*/*"
+            },
+            {
+              "name": "Accept-Encoding",
+              "value": "gzip, deflate, br"
+            },
+            {
+              "name": "Connection",
+              "value": "keep-alive"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"task_id\": \"1779783620654_bV4Ktn5XNFvQ\", \n\"file_path\": [\"\"], \n\"nsfw\": 0, \n\"mark\": \"aplus_image\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "f0510575-f7f7-4375-92f5-d8d9e8b430f5",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "c07bba68-f2fd-44a1-ad1b-07f3043c61dc",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-26T01:16:02.207Z",
+      "createdAt": "2026-05-26T01:16:02.207Z",
+      "role": "workflow:owner",
+      "workflowId": "kUX8yxjBIfbKArOl",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
