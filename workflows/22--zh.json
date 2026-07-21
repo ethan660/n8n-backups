@@ -1,0 +1,234 @@
+{
+  "updatedAt": "2026-05-14T07:41:21.101Z",
+  "createdAt": "2026-01-29T07:01:34.573Z",
+  "id": "Fdf62vvlgLdLD3JBfOLu_",
+  "name": "详情页22--zh测试用",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hello! I am your e-commerce visual consultant. Please upload product images and tell me your selling points (e.g., sofas, sold to the US, French chic style).",
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -64,
+        272
+      ],
+      "id": "521109e5-81e5-4eee-8198-12209aec22b3",
+      "name": "When chat message received",
+      "webhookId": "192c487d-a9d6-410f-9071-e446ca480fee"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json?.['chatInput'] || '';\n  const bin = item.binary || {};\n  \n  // 获取当前 item 下所有的二进制字段名 (如 data0, data1, data2)\n  const binaryKeys = Object.keys(bin);\n\n  if (binaryKeys.length > 0) {\n    // 动态遍历所有图片\n    for (const key of binaryKeys) {\n      const b = bin[key];\n      \n      // 确保该 key 确实包含二进制数据\n      if (b) {\n        // 使用当前 item 的索引 i 和对应的 key 获取 Buffer\n        const buffer = await this.helpers.getBinaryDataBuffer(i, key); \n        const base64 = buffer.toString('base64');\n        const mime = b.mimeType || 'image/jpeg';\n        \n        outputs.push({\n          json: {\n            text_11: text,\n            filename: b.fileName || `${key}.jpg`,\n            image_url_full: `data:${mime};base64,${base64}`,\n          },\n        });\n      }\n    }\n  } else {\n    // 如果没有图片，保留纯文字输出\n    outputs.push({ \n      json: { \n        text_11: text, \n        image_url_full: '' \n      } \n    });\n  }\n}\n\nreturn outputs;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        272
+      ],
+      "id": "cd5aafdf-134c-4dbd-8088-34d834f01a85",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"prompt\": {{ $json.prompt }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        272
+      ],
+      "id": "0d95b679-f679-4933-b5c2-253c0ec2acda",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"[Role] 你是一位资深的亚马逊（Amazon）Listing/A+ 详情页设计大师及 AI 提示词工程师。你需要将产品信息转化为符合平台规则、高转化率、适合移动端阅读的多屏图片提示词，并确保跨屏视觉风格的高度一致性。\\n[Task] 根据用户提供的产品信息和“输出语言要求”，一次性生成指定数量（prompt_count）的图片提示词（List[str]）。每个列表元素对应一屏内容。\\n[Output Format] 仅输出 JSON 字符串列表 (List[str])。不要输出任何多余的文字、解释、Markdown 或代码块。列表长度必须严格等于 prompt_count。每个元素必须仅包含提示词正文（纯文本字符串）。不要输出任何 JSON 对象包装器或字段名（如 {}，prompt: 等）。\\n[REQUIRED Headings] 提示词正文内必须且仅允许包含以下 5 个模块标题：主文案: 副文案: 布局与排版: 视觉与构图: 质量与细节:\\n[Language Rules] 始终遵循“输出中文”的要求。除了无法避免的行业标准缩写、单位或型号（如 USB-C, IPX7, mAh, cm, mm）外，所有描述文字必须使用中文，严禁中英文混杂。\\n[Amazon 合规与控风险规则 — 必须遵守] 严禁使用绝对化或无法证实的表述：不要使用“第一”、“最”、“100%”、“永久”、“零风险”、“治愈”等。使用更温和、可辩护的词汇，如“旨在”、“有助于”、“针对...优化”、“更稳定”、“更易于”、“改进的”。严禁直接命名或抨击竞争对手：在对比图中，使用“传统方案”/“典型产品”代替品牌名。除非用户明确提供，否则不要伪造认证标志（CE, RoHS 等）。针对 KPI 和图表：必须使用“示意图/占位符/示例图表”字样，并添加免责声明，如“结果可能因人而异；基于内部测试”。不要捏造具体的性能百分比。避免医疗/治疗性声明，除非用户提供了合规证明。\\n[Reference Image Consistency] 如果用户上传了产品参考图：将所有参考图视为同一产品的不同角度。确保产品外观（比例、颜色、饰面、材质、Logo 位置、按键布局、纹理细节）在所有屏中完全一致。严禁捏造参考图中不存在的零件或配件。参考图仅约束主体外观；不要复制参考图的背景/道具/灯光。倾向于“将产品抠图/隔离”并在新场景中重建。每屏提示词必须包含“参考行”：\\\"参考：以上传的产品图为严格视觉参考；保持跨屏外观一致。\\\" 如果有多张图，必须指定优先级，如：\\\"首选参考：图 X（角度/细节）\\\"。如果背景杂乱，必须明确要求：\\\"隔离产品，移除人手/杂物，重建干净的摄影棚场景。\\\"\\n[Cross-Screen Consistency (无参考图时)] 根据产品信息锁定统一的视觉系统：主/次色调（最多 2 种）、材质感、一致的灯光方向、阴影风格、图标风格（线条 vs 实心）、排版氛围。保持 UI 组件一致：相同的圆角、线宽、标签样式、图标粗细和间距。\\n[Screen Narrative Order] 逻辑顺序：首屏（结果/痛点反转 + 3–6 个卖点图标）；痛点分析（3–5 项）；一键方案（解决什么 + 如何解决）；核心机制（3 步原理 / 爆炸图）；特征矩阵（6–10 个卡片）；参数规格（大数字 KPI / 图表）；配件/兼容性；使用教程（3–5 步）；场景展示（4–8 个场景）；对比图（本品 vs 传统方案）；信任背书（认证、案例、评论）；异议处理（FAQ + 风险消除）；收尾 CTA + 质保/售后承诺。如果数量不足 13：按顺序合并相邻模块。第一屏必须是首屏；最后一屏必须是 CTA。\\n[Per-Screen Output Structure] 每个数组元素必须包含：屏幕定位: (例如 “屏幕定位: 首屏概览”)。随后是 5 个必须的模块：主文案: \\\"...\\\" 副文案: \\\"...\\\" 布局与排版: ... 视觉与构图: ... 质量与细节: ... \\n在每屏字符串的末尾必须附加抗翻译语句：\\\"保持所有文字仅使用英文输出。不要翻译成中文。不要混入任何中文字符（除标准单位外）。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $json.text_11 }}\"\n        },\n        {{ $json.image_url_full }}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        656,
+        272
+      ],
+      "id": "19e46e40-b219-4351-bcae-aa176b53f0cf",
+      "name": "HTTP gemini-2."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst collectPrompts = () => {\n  const out = [];\n  for (const it of items) {\n    // 1. 定位 Gemini 返回的核心文本\n    const text = it.json?.candidates?.[0]?.content?.parts?.[0]?.text;\n    let s = toStr(text);\n\n    if (s) {\n      // 2. 清洗数据：去掉开头的 ```json 和 [ 以及结尾的 ] ``` \n      // 同时也处理掉可能存在的 JSON 包装符号\n      s = s.replace(/^```json\\s*\\[?\\n?/, '') // 去掉开头的 ```json 和 [\n           .replace(/\\n?\\]?\\s*```$/, '')      // 去掉结尾的 ] 和 ```\n           .trim();\n\n      // 3. 将转义的换行符 \\\\n 替换为真实的换行或空格（根据你的需求，这里替换为真实换行）\n      // 如果你希望完全连成一段话，可以把 '\\n' 改成 ' '\n      s = s.replace(/\\\\n/g, '\\n');\n\n      out.push(s);\n    }\n  }\n  return Array.from(new Set(out));\n};\n\nconst prompts = collectPrompts();\n\n// 最终输出：确保结果干净且只有 1 个 item\nreturn [{\n  json: {\n    prompt: prompts[0] || \"\" \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        272
+      ],
+      "id": "8e901a80-7f74-4178-b0f5-6715d2b6dcb1",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5fdc3575-dbc7-4c6f-8ce9-c4115b9aa487",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Credentials",
+                "value": "true"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET,POST,PUT,OPTIONS,DELETE"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Transfer-Encoding",
+                "value": "chunked"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        64
+      ],
+      "id": "f1d4a583-0d26-4a33-b1b9-aed8f476074f",
+      "name": "Webhook",
+      "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "9d90c09e-8561-46aa-9a3e-32ae2a20b4ca",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-29T07:01:34.573Z",
+      "createdAt": "2026-01-29T07:01:34.573Z",
+      "role": "workflow:owner",
+      "workflowId": "Fdf62vvlgLdLD3JBfOLu_",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
