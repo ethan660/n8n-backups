@@ -1,0 +1,771 @@
+{
+  "updatedAt": "2026-02-02T06:15:10.203Z",
+  "createdAt": "2026-01-30T09:43:51.221Z",
+  "id": "3mfWDUIrTB7IXJfc6T_h4",
+  "name": "生图工作流---测试ok",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.Prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "={{ Object.keys($input.first().binary)[0] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        320
+      ],
+      "id": "a7ae0be4-5c6f-406a-9d9d-3f68d0d59d2f",
+      "name": "Edit an image1",
+      "retryOnFail": true,
+      "notesInFlow": false,
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "waitBetweenTries": 5000,
+      "maxTries": 3,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "JmFKr7dg02RPaOM1",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+        "resizeOption": "onlyIfLarger",
+        "options": {
+          "format": "webp"
+        }
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -1568,
+        304
+      ],
+      "id": "3d31738f-0517-492d-895d-0d89ce5dc427",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 当 Mode 为 \"Run Once for All Items\" 时，输入是一个名为 $input.all() 的数组\nconst allItems = $input.all();\n\n// 处理每一项数据（通常 Chat Trigger 只有 1 个 Item）\nreturn allItems.map(item => {\n  const newBinary = {};\n  \n  // 获取当前 item 中所有的二进制键名 (例如: data0, data1)\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  // 按照你的要求，提取前 3 张并重命名\n  binaryKeys.slice(0, 3).forEach((key, index) => {\n    newBinary[`image_${index}`] = item.binary[key];\n  });\n  \n  // 返回符合 n8n 规范的结构\n  return {\n    json: item.json,\n    binary: newBinary\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2096,
+        304
+      ],
+      "id": "77d21d1f-5081-48fc-b7b8-3b4fcc63487b",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        304
+      ],
+      "id": "45a8e3aa-73c2-4f19-b815-6af3e70585d2",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：清洗字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n/**\n * 核心逻辑：跨节点提取上上上游的文字信息\n * 无论当前工作流经过了多少次拆分，\n * 只要 Code in JavaScript2 执行过，就能通过节点名称找回数据。\n */\nconst getPromptFromSource = () => {\n  try {\n    // 使用 $() 语法精准定位到“Code in JavaScript2”节点\n    const sourceNode = $('Code in JavaScript2').first();\n    \n    // 根据你的截图，文字存放在 body.prompt 或者直接在 json.prompt 中\n    // 这里做一层兼容性处理\n    return toStr(sourceNode.json.prompt || sourceNode.json.body?.prompt);\n  } catch (error) {\n    // 如果找不到节点或字段，返回空字符串，避免整个工作流崩溃\n    return \"\";\n  }\n};\n\nconst finalPrompt = getPromptFromSource();\nconst newBinary = {};\n\n// 处理图片：将当前节点收到的 1~3 张二进制图重新打包\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  \n  // 筛选图片相关的 Key\n  const keys = Object.keys(bin).filter(k =>\n    k.startsWith('image') || k.startsWith('data') || k.startsWith('file') || k.startsWith('webp')\n  );\n\n  for (const key of keys) {\n    // 重新编号：image_0, image_1...\n    const newKey = `image_${i}`;\n    newBinary[newKey] = bin[key];\n  }\n}\n\n// 返回最终的对象数组格式\nreturn [{\n  json: {\n    prompt: finalPrompt,      // 这就是你上上上游丢失的文字\n    total_images: items.length\n  },\n  binary: newBinary          // 聚合后的图片数据\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1296,
+        304
+      ],
+      "id": "aafc61df-f02a-42c8-bd10-5ae5c5d0f6dd",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：清洗与标准化\nconst toStr = (v) => (v == null ? '' : String(v));\nconst normalize = (s) => {\n  let t = toStr(s);\n  t = t.replace(/\\r\\n/g, '\\n');\n  if (t.includes('\\\\n')) t = t.replace(/\\\\n/g, '\\n');\n  return t.trim();\n};\n\n// 1. 获取源文本：精准锁定 Code in JavaScript3\nconst getSourceText = () => {\n  try {\n    const n = $('Code in JavaScript3').first();\n    return normalize(n?.json?.prompt || '');\n  } catch (_) {\n    const j = items[0]?.json || {};\n    return normalize(j.prompt || j.chatInput || '');\n  }\n};\n\n// 2. 【核心优化】改进拆分正则\nconst splitByMarker = (s) => {\n  // 使用更宽松的正则：不强制在行首，只要出现“屏幕定位”就切分\n  // (?=屏幕定位) 是正向预查，保留关键词在段落开头\n  const segments = s.split(/(?=屏幕定位[:：])/);\n  \n  // 清洗每一段，去掉长度过短的无效段落\n  return segments\n    .map(seg => seg.trim())\n    .filter(seg => seg.length > 5);\n};\n\n// 3. 收集二进制数据：保留 1~3 张参考图\nconst collectSharedBinary = async () => {\n  let bin = {};\n  try {\n    // 优先从上游聚合节点获取\n    const n = $('Code in JavaScript3').first();\n    bin = n?.binary || {};\n  } catch (_) {\n    bin = items[0]?.binary || {};\n  }\n  \n  const out = {};\n  for (const k of Object.keys(bin)) {\n    // 强制克隆二进制引用，防止 n8n 引擎在输出多个 Item 时丢失数据\n    const buf = await this.helpers.getBinaryDataBuffer(0, k);\n    out[k] = await this.helpers.prepareBinaryData(buf, bin[k].fileName, bin[k].mimeType);\n  }\n  return out;\n};\n\n// 执行主逻辑\nconst text = getSourceText();\nconst segments = splitByMarker(text);\nconst sharedBinary = await collectSharedBinary();\n\n// 4. 组装输出：一段文字 + 相同的三张图\nconst outputs = segments.map((seg, i) => {\n  const item = { \n    json: { \n      index: i + 1, \n      Prompt: seg \n    } \n  };\n  if (Object.keys(sharedBinary).length) {\n    item.binary = sharedBinary;\n  }\n  return item;\n});\n\nreturn outputs.length ? outputs : [{ json: { index: 0, Prompt: '未检测到有效段落' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        304
+      ],
+      "id": "a425733a-cab9-4059-988f-892823f4681c",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Credentials",
+                "value": "true"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET,POST,PUT,OPTIONS,DELETE"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Transfer-Encoding",
+                "value": "chunked"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2448,
+        304
+      ],
+      "id": "30c62fbe-0b9d-4b5e-9f15-605f6ba77e55",
+      "name": "Webhook2",
+      "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        576,
+        80
+      ],
+      "id": "203a038a-d56c-444c-b2ea-0016dd81bcc2",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -704,
+        304
+      ],
+      "id": "67fa7637-01e9-4b8d-a275-5945bbe95d68",
+      "name": "Loop Over Items",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_images",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "bfa46dc4-5d69-44ae-8c3a-ff34ebbe5d78",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        80
+      ],
+      "id": "d9fc927e-354a-40cb-b511-439d04da8f22",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Edit an image1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook2": {
+      "main": [
+        []
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9bc9bb02-e809-4dca-a749-75cd5e411b1d",
+  "activeVersionId": "9bc9bb02-e809-4dca-a749-75cd5e411b1d",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-30T09:43:51.221Z",
+      "createdAt": "2026-01-30T09:43:51.221Z",
+      "role": "workflow:owner",
+      "workflowId": "3mfWDUIrTB7IXJfc6T_h4",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-02-02T06:18:24.371Z",
+    "createdAt": "2026-02-02T06:15:10.204Z",
+    "versionId": "9bc9bb02-e809-4dca-a749-75cd5e411b1d",
+    "workflowId": "3mfWDUIrTB7IXJfc6T_h4",
+    "nodes": [
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash-image",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+          },
+          "prompt": "={{ $json.Prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "={{ Object.keys($input.first().binary)[0] }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -224,
+          320
+        ],
+        "id": "a7ae0be4-5c6f-406a-9d9d-3f68d0d59d2f",
+        "name": "Edit an image1",
+        "retryOnFail": true,
+        "notesInFlow": false,
+        "executeOnce": false,
+        "alwaysOutputData": false,
+        "waitBetweenTries": 5000,
+        "maxTries": 3,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "JmFKr7dg02RPaOM1",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "operation": "resize",
+          "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+          "resizeOption": "onlyIfLarger",
+          "options": {
+            "format": "webp"
+          }
+        },
+        "type": "n8n-nodes-base.editImage",
+        "typeVersion": 1,
+        "position": [
+          -1568,
+          304
+        ],
+        "id": "3d31738f-0517-492d-895d-0d89ce5dc427",
+        "name": "Edit Image"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 当 Mode 为 \"Run Once for All Items\" 时，输入是一个名为 $input.all() 的数组\nconst allItems = $input.all();\n\n// 处理每一项数据（通常 Chat Trigger 只有 1 个 Item）\nreturn allItems.map(item => {\n  const newBinary = {};\n  \n  // 获取当前 item 中所有的二进制键名 (例如: data0, data1)\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  // 按照你的要求，提取前 3 张并重命名\n  binaryKeys.slice(0, 3).forEach((key, index) => {\n    newBinary[`image_${index}`] = item.binary[key];\n  });\n  \n  // 返回符合 n8n 规范的结构\n  return {\n    json: item.json,\n    binary: newBinary\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2096,
+          304
+        ],
+        "id": "77d21d1f-5081-48fc-b7b8-3b4fcc63487b",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "=$binary",
+          "options": {
+            "includeBinary": true
+          }
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          -1824,
+          304
+        ],
+        "id": "45a8e3aa-73c2-4f19-b815-6af3e70585d2",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// 辅助函数：清洗字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n/**\n * 核心逻辑：跨节点提取上上上游的文字信息\n * 无论当前工作流经过了多少次拆分，\n * 只要 Code in JavaScript2 执行过，就能通过节点名称找回数据。\n */\nconst getPromptFromSource = () => {\n  try {\n    // 使用 $() 语法精准定位到“Code in JavaScript2”节点\n    const sourceNode = $('Code in JavaScript2').first();\n    \n    // 根据你的截图，文字存放在 body.prompt 或者直接在 json.prompt 中\n    // 这里做一层兼容性处理\n    return toStr(sourceNode.json.prompt || sourceNode.json.body?.prompt);\n  } catch (error) {\n    // 如果找不到节点或字段，返回空字符串，避免整个工作流崩溃\n    return \"\";\n  }\n};\n\nconst finalPrompt = getPromptFromSource();\nconst newBinary = {};\n\n// 处理图片：将当前节点收到的 1~3 张二进制图重新打包\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  \n  // 筛选图片相关的 Key\n  const keys = Object.keys(bin).filter(k =>\n    k.startsWith('image') || k.startsWith('data') || k.startsWith('file') || k.startsWith('webp')\n  );\n\n  for (const key of keys) {\n    // 重新编号：image_0, image_1...\n    const newKey = `image_${i}`;\n    newBinary[newKey] = bin[key];\n  }\n}\n\n// 返回最终的对象数组格式\nreturn [{\n  json: {\n    prompt: finalPrompt,      // 这就是你上上上游丢失的文字\n    total_images: items.length\n  },\n  binary: newBinary          // 聚合后的图片数据\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1296,
+          304
+        ],
+        "id": "aafc61df-f02a-42c8-bd10-5ae5c5d0f6dd",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// 辅助函数：清洗与标准化\nconst toStr = (v) => (v == null ? '' : String(v));\nconst normalize = (s) => {\n  let t = toStr(s);\n  t = t.replace(/\\r\\n/g, '\\n');\n  if (t.includes('\\\\n')) t = t.replace(/\\\\n/g, '\\n');\n  return t.trim();\n};\n\n// 1. 获取源文本：精准锁定 Code in JavaScript3\nconst getSourceText = () => {\n  try {\n    const n = $('Code in JavaScript3').first();\n    return normalize(n?.json?.prompt || '');\n  } catch (_) {\n    const j = items[0]?.json || {};\n    return normalize(j.prompt || j.chatInput || '');\n  }\n};\n\n// 2. 【核心优化】改进拆分正则\nconst splitByMarker = (s) => {\n  // 使用更宽松的正则：不强制在行首，只要出现“屏幕定位”就切分\n  // (?=屏幕定位) 是正向预查，保留关键词在段落开头\n  const segments = s.split(/(?=屏幕定位[:：])/);\n  \n  // 清洗每一段，去掉长度过短的无效段落\n  return segments\n    .map(seg => seg.trim())\n    .filter(seg => seg.length > 5);\n};\n\n// 3. 收集二进制数据：保留 1~3 张参考图\nconst collectSharedBinary = async () => {\n  let bin = {};\n  try {\n    // 优先从上游聚合节点获取\n    const n = $('Code in JavaScript3').first();\n    bin = n?.binary || {};\n  } catch (_) {\n    bin = items[0]?.binary || {};\n  }\n  \n  const out = {};\n  for (const k of Object.keys(bin)) {\n    // 强制克隆二进制引用，防止 n8n 引擎在输出多个 Item 时丢失数据\n    const buf = await this.helpers.getBinaryDataBuffer(0, k);\n    out[k] = await this.helpers.prepareBinaryData(buf, bin[k].fileName, bin[k].mimeType);\n  }\n  return out;\n};\n\n// 执行主逻辑\nconst text = getSourceText();\nconst segments = splitByMarker(text);\nconst sharedBinary = await collectSharedBinary();\n\n// 4. 组装输出：一段文字 + 相同的三张图\nconst outputs = segments.map((seg, i) => {\n  const item = { \n    json: { \n      index: i + 1, \n      Prompt: seg \n    } \n  };\n  if (Object.keys(sharedBinary).length) {\n    item.binary = sharedBinary;\n  }\n  return item;\n});\n\nreturn outputs.length ? outputs : [{ json: { index: 0, Prompt: '未检测到有效段落' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1024,
+          304
+        ],
+        "id": "a425733a-cab9-4059-988f-892823f4681c",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*",
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "name": "Access-Control-Allow-Credentials",
+                  "value": "true"
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "value": "GET,POST,PUT,OPTIONS,DELETE"
+                },
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+                },
+                {
+                  "name": "Cache-Control",
+                  "value": "no-store, no-cache, must-revalidate, max-age=0"
+                },
+                {
+                  "name": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "text/html; charset=UTF-8"
+                },
+                {
+                  "name": "Expires",
+                  "value": "0"
+                },
+                {
+                  "name": "Pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "name": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -2448,
+          304
+        ],
+        "id": "30c62fbe-0b9d-4b5e-9f15-605f6ba77e55",
+        "name": "Webhook2",
+        "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          576,
+          80
+        ],
+        "id": "203a038a-d56c-444c-b2ea-0016dd81bcc2",
+        "name": "Respond to Webhook2"
+      },
+      {
+        "parameters": {
+          "options": {
+            "reset": false
+          }
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -704,
+          304
+        ],
+        "id": "67fa7637-01e9-4b8d-a275-5945bbe95d68",
+        "name": "Loop Over Items",
+        "retryOnFail": false
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "all_images",
+          "options": {
+            "includeBinaries": true
+          }
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          -208,
+          80
+        ],
+        "id": "bfa46dc4-5d69-44ae-8c3a-ff34ebbe5d78",
+        "name": "Aggregate"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          96,
+          80
+        ],
+        "id": "d9fc927e-354a-40cb-b511-439d04da8f22",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Edit an image1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Image": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Edit Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook2": {
+        "main": [
+          []
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Nice Nice",
+    "name": "Version 9bc9bb02",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
