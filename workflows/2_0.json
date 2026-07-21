@@ -1,0 +1,268 @@
+{
+  "updatedAt": "2026-05-14T07:05:01.089Z",
+  "createdAt": "2026-05-14T07:03:37.472Z",
+  "id": "m_YNAljB8JSo77JHIa1mw",
+  "name": "服饰直出2.0",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac86ad9a-f1ac-44b7-a8a3-6ad879c80f14",
+              "leftValue": "={{ $binary['产品图'] ? 'ok' : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "abc60981-54bd-4811-9965-80767accbf16",
+              "leftValue": "={{ $binary['场景图'] ? 'ok' : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -336,
+        176
+      ],
+      "id": "826fd000-2108-4136-857c-06e75dfcd25b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "43962247-6160-4629-9312-5be2ca9eaa05",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "ckimage",
+        "resizeOption": "onlyIfLarger",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        16,
+        192
+      ],
+      "id": "55b6871d-e312-4450-87f1-9847c90211ff",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "472141e0-c30b-423b-bc81-27fd2be96b54",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -768,
+        176
+      ],
+      "id": "467f32a8-92be-4839-b9bf-222de3e91bd9",
+      "name": "Webhook1",
+      "webhookId": "472141e0-c30b-423b-bc81-27fd2be96b54"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=1生成图像，根据prompt布置场景和欧美人物，无侵权风险。 \n2.将产品{{ $('Webhook1').item.json.body.name }}替换进入图像内，且画面颜色风格与参考图产品适配。\n3.禁止出现中文水印和亚洲人。\n场景描述：{{ $json.candidates[0].content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1216,
+        192
+      ],
+      "id": "29d8690b-3ca6-4d03-b020-f9274d5e1a63",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={{ $env.GEMINI_API_KEY }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"你是一个文生图提示词专家。输入包含产品参考图（详细描述输入图像，包括人物、场景、光影、构图。真实相机图片风格输出）、产品名称：{{ $('Webhook1').item.json.body.name }}，输出一段可直接用于文生图的自然语言场景描述。\\n\\n## 核心规则\\n\\n### 1. 产品剔除（强制）\\n- 产品：{{ $('Webhook1').item.json.body.name }}——输出中严禁出现产品名称、近义词、品类统称或任何替代词\\n- 从参考图像描述中仅提取产品的空间占位（位置、大小、角度）及与人物的互动关系（手持、穿戴、身旁等），严禁描述其颜色、材质、图案\\n- 禁止描述：附着在产品上的装饰/配件/标签/挂件/贴饰；与产品形状或造型相似的物体\\n- 产品{{ $('Webhook1').item.json.body.name }}一切可见属性由变量承载，输出中只保留空间占位\\n\\n### 2. 人物姿态与结构\\n- 忠实再现参考图像的构图、人物姿态与位置、空间层次关系\\n- 严禁描述肤色、发色、瞳色、唇色及服饰颜色——仅描述姿态、动作、年龄感与面部结构\\n- 有面部时：描述性别、大致年龄段、轮廓特征（眉弓、鼻梁、下颌线条），不涉及颜色\\n- 无正脸时：描述体态、肢体动作、与环境的互动\\n- 肤质可描述光泽感与整体质感，禁止毛孔、纹理等细节\\n\\n## 输出要求\\n- 纯自然语言，禁止\\\"构图\\\"\\\"主体\\\"\\\"背景\\\"等段落标题及【】等结构化标签\\n- 禁止开场白，直接开始描述，800字以内\\n- 描述顺序：整体画面感 → 人物与产品关系 → 空间环境 → 光影氛围\\n- 中文输出\"\n        },\n        {\n          \"text\": \"以下是用户提供的袜子产品场景图：\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"image/png\",\n            \"data\": \"{{ $json.base64 }}\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        848,
+        192
+      ],
+      "id": "24d64522-791b-40f7-9e35-fc847ba4ee99",
+      "name": "gemini2.5",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// 只保留 image_0，删除 image_1（如果存在）\nfor (const item of items) {\n  if (item.binary && item.binary.image_1) {\n    delete item.binary.image_1;\n  }\n}\n\n// 可选：如果你想把 image_0 改名成统一的名字（如 \"main_image\"），取消下面注释\n// if (item.binary && item.binary.image_0) {\n//   item.binary.main_image = item.binary.image_0;\n//   delete item.binary.image_0;\n// }\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        192
+      ],
+      "id": "f1c6c1c4-b633-4b7a-a956-bc0d5aeaadd0",
+      "name": "Code in JavaScript2-提取场景图片"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取当前 item 的 binary 数据（ckimage）\nconst binaryData = $input.first().binary?.ckimage;\n\nif (!binaryData) {\n  throw new Error(\"没有找到 binary property 'ckimage'，请检查上游节点是否正确输出 ckimage\");\n}\n\n// 用 Buffer 读取图像（兼容 filesystem 模式）\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'ckimage');\nconst base64String = buffer.toString('base64');\n\n// ────────────────────────────────────────────────\n// 1. 解析原始分辨率（加强版 JPEG 扫描 + 边界保护）\nlet originalWidth = '未知';\nlet originalHeight = '未知';\n\ntry {\n  const fileType = binaryData.mimeType || '';\n  \n  // PNG 解析（不变）\n  if (fileType.includes('png') || buffer.toString('utf8', 0, 4) === '\\x89PNG') {\n    originalWidth  = buffer.readUInt32BE(16);\n    originalHeight = buffer.readUInt32BE(20);\n  } \n  // JPEG 加强扫描（顺序找 SOF 标记，防止跳过头或读错）\n  else if (fileType.includes('jpeg') || fileType.includes('jpg') || (buffer[0] === 0xFF && buffer[1] === 0xD8)) {\n    let i = 2;\n    while (i < buffer.length - 10) {  // 留足空间避免越界\n      if (buffer[i] !== 0xFF) {\n        i++;\n        continue;\n      }\n      \n      const marker = buffer[i + 1];\n      \n      // 找到 SOF 标记（0xC0 ~ 0xCF 中的 Baseline/Progressive）\n      if (marker >= 0xC0 && marker <= 0xCF && marker !== 0xC4 && marker !== 0xC8 && marker !== 0xCC) {\n        // 跳过段长度 (2字节)\n        // 字节 i+2 ~ i+3: 段长度\n        // 字节 i+4: 数据精度 (1字节)\n        // 字节 i+5 ~ i+6: 高度 (高字节在前)\n        // 字节 i+7 ~ i+8: 宽度 (高字节在前)\n        originalHeight = buffer.readUInt16BE(i + 5);\n        originalWidth  = buffer.readUInt16BE(i + 7);\n        break;\n      }\n      \n      // 跳过当前段（防止无限循环）\n      const segmentLength = buffer.readUInt16BE(i + 2);\n      if (segmentLength < 2) break;  // 无效长度，防止死循环\n      i += 2 + segmentLength;\n    }\n  }\n} catch (e) {\n  console.log(\"分辨率解析失败:\", e.message);\n}\n\n// ────────────────────────────────────────────────\n// 2. 把较短边放大到至少 1024（如果短边已 >=1024，则保持原尺寸）\nlet targetWidth = originalWidth;\nlet targetHeight = originalHeight;\n\nif (originalWidth !== '未知' && originalHeight !== '未知') {\n  const minSide = Math.min(originalWidth, originalHeight);\n  \n  // 只有短边 < 1024 时才放大\n  if (minSide < 1024) {\n    const scale = 1024 / minSide;\n    targetWidth = Math.round(originalWidth * scale);\n    targetHeight = Math.round(originalHeight * scale);\n  }\n  // 否则保持原尺寸\n}\n\n// ────────────────────────────────────────────────\n// 3. 匹配最接近的预设比例（1:1、2:3、3:2、3:4、4:3、9:16、16:9、21:9）\nlet proportion = \"1:1\";\n\nif (originalWidth !== '未知' && originalHeight !== '未知') {\n  const ratio = originalWidth / originalHeight;\n  \n  const presets = [\n    {name: \"1:1\",   r: 1.0},\n    {name: \"2:3\",   r: 2/3},\n    {name: \"3:2\",   r: 3/2},\n    {name: \"3:4\",   r: 3/4},\n    {name: \"4:3\",   r: 4/3},\n    {name: \"9:16\",  r: 9/16},\n    {name: \"16:9\",  r: 16/9},\n    {name: \"21:9\",  r: 21/9}\n  ];\n\n  let minDiff = Infinity;\n  for (const p of presets) {\n    const diff = Math.abs(ratio - p.r);\n    if (diff < minDiff) {\n      minDiff = diff;\n      proportion = p.name;\n    }\n  }\n}\n\n// ────────────────────────────────────────────────\n// 输出结果（所有功能完整保留）\nreturn [{\n  json: {\n    // 保留上游所有 json 数据\n    ...$input.first().json,\n    \n    // 核心输出：base64\n    base64: base64String,\n    data_uri: `data:${binaryData.mimeType || 'image/png'};base64,${base64String}`,\n    \n    // 原有文件信息\n    originalFileName: binaryData.fileName || 'unnamed.png',\n    mimeType: binaryData.mimeType || 'image/png',\n    fileSizeBytes: binaryData.fileSize || 'unknown',\n    \n    // 原始分辨率\n    originalResolution: {\n      width: originalWidth,\n      height: originalHeight,\n      display: originalWidth !== '未知' ? `${originalWidth} × ${originalHeight}` : '无法解析'\n    },\n    \n    // 目标分辨率（短边至少 1024，已大于则保持原尺寸）\n    targetResolution: {\n      width: targetWidth,\n      height: targetHeight,\n      display: `${targetWidth} × ${targetHeight}`\n    },\n    \n    // 最接近的预设比例\n    proportion: proportion\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        192
+      ],
+      "id": "2ca8b810-1095-416d-aff8-4b51426966c9",
+      "name": "Code in JavaScript1-场景图片转base64，提取图像长宽，放大到1k"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2-提取场景图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gemini2.5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2-提取场景图片": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1-场景图片转base64，提取图像长宽，放大到1k",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1-场景图片转base64，提取图像长宽，放大到1k": {
+      "main": [
+        [
+          {
+            "node": "gemini2.5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d4fcd92c-03b5-4737-84fd-c933d51b70bb",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-14T07:03:37.472Z",
+      "createdAt": "2026-05-14T07:03:37.472Z",
+      "role": "workflow:owner",
+      "workflowId": "m_YNAljB8JSo77JHIa1mw",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
