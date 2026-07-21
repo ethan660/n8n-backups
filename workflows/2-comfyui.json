@@ -1,0 +1,434 @@
+{
+  "updatedAt": "2026-05-14T07:45:33.913Z",
+  "createdAt": "2026-03-09T03:03:32.858Z",
+  "id": "hz8Jv0fERO-emUdu_QmX7",
+  "name": "溶图2-comfyui节点测试",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ac86ad9a-f1ac-44b7-a8a3-6ad879c80f14",
+              "leftValue": "产品图",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "abc60981-54bd-4811-9965-80767accbf16",
+              "leftValue": "场景图",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        208
+      ],
+      "id": "c7c25cee-49a8-4841-86e0-fee3b6324b20",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -80,
+        64
+      ],
+      "id": "8298076a-22c2-455f-9e64-bc9f455b8955",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+        "resizeOption": "onlyIfLarger",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        240,
+        304
+      ],
+      "id": "d7a74ce1-a699-4aaa-8683-51e713d4dba8",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "472141e0-c30b-423b-bc81-27fd2be96b54",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        208
+      ],
+      "id": "ab0eac4e-7fce-4133-994d-0ce31c4f9fec",
+      "name": "Webhook1",
+      "webhookId": "472141e0-c30b-423b-bc81-27fd2be96b54"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2352,
+        320
+      ],
+      "id": "31b5a901-1047-4a54-8f6c-994905a3343c",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 当 Mode 为 \"Run Once for All Items\" 时，输入是一个名为 $input.all() 的数组\nconst allItems = $input.all();\n\n// 处理每一项数据（通常 Chat Trigger 只有 1 个 Item）\nreturn allItems.map(item => {\n  const newBinary = {};\n  \n  // 获取当前 item 中所有的二进制键名 (例如: data0, data1)\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  // 按照你的要求，提取前 3 张并重命名\n  binaryKeys.slice(0, 3).forEach((key, index) => {\n    newBinary[`image_${index}`] = item.binary[key];\n  });\n  \n  // 返回符合 n8n 规范的结构\n  return {\n    json: item.json,\n    binary: newBinary\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        304
+      ],
+      "id": "9b850a7e-51c1-424d-80a6-0deec2934de5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 只保留 image_0，删除 image_1（如果存在）\nfor (const item of items) {\n  if (item.binary && item.binary.image_1) {\n    delete item.binary.image_1;\n  }\n}\n\n// 可选：如果你想把 image_0 改名成统一的名字（如 \"main_image\"），取消下面注释\n// if (item.binary && item.binary.image_0) {\n//   item.binary.main_image = item.binary.image_0;\n//   delete item.binary.image_0;\n// }\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        304
+      ],
+      "id": "272d988a-7710-4025-91a1-a9fdba157853",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "将袜子融入场景人物中，调整场景人物袜子的长短，保证产品袜子长短不变",
+        "images": {
+          "values": [
+            {},
+            {
+              "binaryPropertyName": "cp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        320
+      ],
+      "id": "3af632b5-d5c0-457b-8b38-90a7ab4e1aed",
+      "name": "Edit an image",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "你是一位专业的AI图像生成提示词工程师。请详细描述这张图像的主体、镜头角度，仰视，俯视，前景、中景、背景、构图，、视觉引导、色调、光影氛围等细节并创作出具有深度、氛围和艺术感的图像提示词。\n\n要求：1,人物为年轻美丽帅气的欧美人，描述性别，中文提示词，不要出现对图像水印的描述，不要出现无关的文字和符号，不需要总结，限制在600字以内.\n严格按照以下格式输出，不要加空格，不要段落。形成一整段文字",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "messageType": "imageBinary",
+              "binaryImageDataKey": "image_0"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        640,
+        96
+      ],
+      "id": "e3827184-e1dc-437f-b4b4-0aeea4dec956",
+      "name": "Basic LLM Chain1",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000
+    },
+    {
+      "parameters": {
+        "workflow": "={\n  \"113\": {\n    \"inputs\": {\n      \"model\": \"ema_vae_fp16.safetensors\",\n      \"device\": \"cuda:0\",\n      \"encode_tiled\": true,\n      \"encode_tile_size\": 1024,\n      \"encode_tile_overlap\": 128,\n      \"decode_tiled\": true,\n      \"decode_tile_size\": 1024,\n      \"decode_tile_overlap\": 128,\n      \"tile_debug\": \"false\",\n      \"offload_device\": \"cpu\",\n      \"cache_model\": false\n    },\n    \"class_type\": \"SeedVR2LoadVAEModel\",\n    \"_meta\": {\n      \"title\": \"SeedVR2 (Down)Load VAE Model\"\n    }\n  },\n  \"117\": {\n    \"inputs\": {\n      \"conditioning\": [\n        \"144\",\n        0\n      ]\n    },\n    \"class_type\": \"ConditioningZeroOut\",\n    \"_meta\": {\n      \"title\": \"条件零化\"\n    }\n  },\n  \"138\": {\n    \"inputs\": {\n      \"upscale_method\": \"lanczos\",\n      \"megapixels\": 0.3,\n      \"resolution_steps\": 1,\n      \"image\": [\n        \"147\",\n        0\n      ]\n    },\n    \"class_type\": \"ImageScaleToTotalPixels\",\n    \"_meta\": {\n      \"title\": \"图像按像素缩放\"\n    }\n  },\n  \"142\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": [\n        \"150\",\n        0\n      ],\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"start_at_step\": 0,\n      \"end_at_step\": 1,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\n        \"161\",\n        0\n      ],\n      \"positive\": [\n        \"144\",\n        0\n      ],\n      \"negative\": [\n        \"117\",\n        0\n      ],\n      \"latent_image\": [\n        \"146\",\n        4\n      ]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"K采样器(高级)\"\n    }\n  },\n  \"143\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": [\n        \"150\",\n        0\n      ],\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"euler_ancestral\",\n      \"scheduler\": \"ddim_uniform\",\n      \"start_at_step\": 0,\n      \"end_at_step\": 1,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\n        \"161\",\n        0\n      ],\n      \"positive\": [\n        \"144\",\n        0\n      ],\n      \"negative\": [\n        \"117\",\n        0\n      ],\n      \"latent_image\": [\n        \"146\",\n        4\n      ]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"K采样器(高级)\"\n    }\n  },\n  \"144\": {\n    \"inputs\": {\n      \"text\": \"{{ $json.text }}\",\n      \"clip\": [\n        \"162\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP文本编码器\"\n    }\n  },\n  \"146\": {\n    \"inputs\": {\n      \"width\": 1024,\n      \"height\": 1536,\n      \"aspect_ratio\": \"custom\",\n      \"swap_dimensions\": \"Off\",\n      \"upscale_factor\": 1,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"CR SDXL Aspect Ratio\",\n    \"_meta\": {\n      \"title\": \"SDXL宽高比v2\"\n    }\n  },\n  \"147\": {\n    \"inputs\": {\n      \"samples\": [\n        \"151\",\n        0\n      ],\n      \"vae\": [\n        \"163\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE解码\"\n    }\n  },\n  \"150\": {\n    \"inputs\": {\n      \"seed\": 9528\n    },\n    \"class_type\": \"easy seed\",\n    \"_meta\": {\n      \"title\": \"随机种\"\n    }\n  },\n  \"151\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": [\n        \"150\",\n        0\n      ],\n      \"steps\": 10,\n      \"cfg\": 1,\n      \"sampler_name\": \"euler_ancestral\",\n      \"scheduler\": \"sgm_uniform\",\n      \"start_at_step\": 1,\n      \"end_at_step\": 10000,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\n        \"161\",\n        0\n      ],\n      \"positive\": [\n        \"144\",\n        0\n      ],\n      \"negative\": [\n        \"117\",\n        0\n      ],\n      \"latent_image\": [\n        \"164\",\n        0\n      ]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"K采样器(高级)\"\n    }\n  },\n  \"155\": {\n    \"inputs\": {\n      \"filename_prefix\": \"SeedVR2 修复\",\n      \"images\": [\n        \"157\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"保存图像\"\n    }\n  },\n  \"157\": {\n    \"inputs\": {\n      \"seed\": 9527,\n      \"resolution\": 2560,\n      \"max_resolution\": 4096,\n      \"batch_size\": 1,\n      \"uniform_batch_size\": false,\n      \"color_correction\": \"lab\",\n      \"temporal_overlap\": 0,\n      \"prepend_frames\": 0,\n      \"input_noise_scale\": 0,\n      \"latent_noise_scale\": 0,\n      \"offload_device\": \"cpu\",\n      \"enable_debug\": true,\n      \"image\": [\n        \"138\",\n        0\n      ],\n      \"dit\": [\n        \"159\",\n        0\n      ],\n      \"vae\": [\n        \"113\",\n        0\n      ]\n    },\n    \"class_type\": \"SeedVR2VideoUpscaler\",\n    \"_meta\": {\n      \"title\": \"SeedVR2 Video Upscaler (v2.5.22)\"\n    }\n  },\n  \"159\": {\n    \"inputs\": {\n      \"model\": \"seedvr2_ema_3b_fp16.safetensors\",\n      \"device\": \"cuda:0\",\n      \"blocks_to_swap\": 16,\n      \"swap_io_components\": false,\n      \"offload_device\": \"cpu\",\n      \"cache_model\": \"flash_attn\",\n      \"attention_mode\": \"sdpa\"\n    },\n    \"class_type\": \"SeedVR2LoadDiTModel\",\n    \"_meta\": {\n      \"title\": \"SeedVR2 (Down)Load DiT Model\"\n    }\n  },\n  \"161\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"UNET加载器\"\n    }\n  },\n  \"162\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"CLIP加载器\"\n    }\n  },\n  \"163\": {\n    \"inputs\": {\n      \"vae_name\": \"z-image-turbo-vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"VAE加载器\"\n    }\n  },\n  \"164\": {\n    \"inputs\": {\n      \"method\": \"RGB\",\n      \"factor\": 1.5000000000000002,\n      \"device\": \"auto\",\n      \"batch_size\": 0,\n      \"latent\": [\n        \"143\",\n        0\n      ],\n      \"reference\": [\n        \"142\",\n        0\n      ]\n    },\n    \"class_type\": \"LatentColorMatch\",\n    \"_meta\": {\n      \"title\": \"🎨 Latent Color Match\"\n    }\n  }\n}",
+        "outputFormat": "png"
+      },
+      "type": "n8n-nodes-comfyui.comfyui",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        96
+      ],
+      "id": "6f5978b3-89e0-4717-ab8b-ded91e7f8a24",
+      "name": "ComfyUI",
+      "credentials": {
+        "comfyUIApi": {
+          "id": "TmvURAmWUL9kwTy1",
+          "name": "ComfyUI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "width": 1024,
+        "height": 1024,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        1488,
+        320
+      ],
+      "id": "e941318e-7048-406b-b252-cdef15919001",
+      "name": "Edit Image1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 辅助函数：安全转字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n// 1. 从当前输入（Edit Image1）拿到 data 的 binary\nconst currentBinary = $input.first()?.binary || {};\nconst dataBinary = currentBinary.data;   // 你的 Edit Image1 输出叫 data\n\n// 2. 从最早的 If 节点拿到 cp binary（跨节点引用）\nlet cpBinary = null;\ntry {\n  const ifNode = $(\"If\").first();          // 或 .item 如果你确定是单个 item\n  cpBinary = ifNode?.binary?.cp;\n} catch (e) {\n  // 如果节点名不对或没找到，可加 log\n  console.log(\"无法从 If 节点获取 cp\", e);\n}\n\n// 3. 准备输出（类似你学习的代码风格）\nconst hasData = !!dataBinary;\nconst hasCp   = !!cpBinary;\n\nif (!hasData && !hasCp) {\n  return [{ json: { error: \"没有找到任何图片 binary\" } }];\n}\n\n// 可以选择：两个文件都输出为单独 item，或者合并到一个 item\n// 这里模仿“每个文件一个 item”的风格\nconst outputs = [];\n\nif (hasData) {\n  outputs.push({\n    json: {\n      type: \"from_edit\",\n      fileName: dataBinary.fileName || \"edit_data.png\",\n      mimeType: dataBinary.mimeType || \"image/png\",\n      source: \"Edit Image1\"\n    },\n    binary: { data: dataBinary }   // 保持原 key 或改名\n  });\n}\n\nif (hasCp) {\n  outputs.push({\n    json: {\n      type: \"from_if\",\n      fileName: cpBinary.fileName || \"if_cp.png\",\n      mimeType: cpBinary.mimeType || \"image/png\",\n      source: \"If 节点\"\n    },\n    binary: { cp: cpBinary }\n  });\n}\n\n// 如果你想两个文件放在同一个 item 里（更常见）\nif (outputs.length === 0) {\n  return [{ json: { message: \"无图片\" } }];\n} else if (outputs.length === 1) {\n  return outputs;\n} else {\n  // 两个都存在时，合并成一个 item（推荐下游处理）\n  return [{\n    json: {\n      hasBoth: true,\n      dataFileName: dataBinary?.fileName,\n      cpFileName: cpBinary?.fileName\n    },\n    binary: {\n      data: dataBinary,\n      cp: cpBinary\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1776,
+        320
+      ],
+      "id": "7e8633bf-d0d9-4b65-afca-cc163454d40b",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen/Qwen3-VL-30B-A3B-Instruct",
+          "mode": "list",
+          "cachedResultName": "Qwen/Qwen3-VL-30B-A3B-Instruct"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        752,
+        320
+      ],
+      "id": "780faec9-0e00-4a93-a9cd-60ed88ba046f",
+      "name": "OpenAI Chat Model",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "4h3AA9UIed1lWM83",
+          "name": "bolatu"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "Edit Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Edit an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "068e4bcb-2db6-4b7c-911f-c1f98dd7cbf4",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-09T03:03:32.858Z",
+      "createdAt": "2026-03-09T03:03:32.858Z",
+      "role": "workflow:owner",
+      "workflowId": "hz8Jv0fERO-emUdu_QmX7",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
