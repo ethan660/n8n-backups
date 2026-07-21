@@ -1,0 +1,280 @@
+{
+  "updatedAt": "2026-07-08T08:57:18.144Z",
+  "createdAt": "2026-05-21T08:58:22.648Z",
+  "id": "2a6zMefKIzJqwr8k",
+  "name": "工作流报错处理（pc端）",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d7d468e0-30a6-4a1f-ad7d-a26e8507ee51",
+      "name": "Error Trigger",
+      "alwaysOutputData": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.weetar.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"task_id\": \"{{ $json.taskId }}\", \n\"file_path\": [\"{{ $json.finalPath }}\"], \n\"nsfw\": 0, \n\"mark\": \"aplus_image\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        848,
+        0
+      ],
+      "id": "69a513e3-07a6-4874-87fa-e670b7dfa303",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "execution",
+        "operation": "get",
+        "executionId": "={{ $json.execution.id }}",
+        "options": {
+          "activeWorkflows": true
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        288,
+        0
+      ],
+      "id": "ff2b43bb-326e-4744-b28b-c363cead40f2",
+      "name": "Get an execution",
+      "credentials": {
+        "n8nApi": {
+          "id": "SYaFd3PggBJZ8U4E",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const exec = $input.first().json;\n\nlet taskId = null;\nlet imageBasePath = null;\n\n// ---------- 递归：同时找 taskId + imageBasePath ----------\nfunction findKeys(obj) {\n  if (!obj || (taskId && imageBasePath)) return;\n\n  // 匹配 taskId\n  if (obj.taskId && typeof obj.taskId === 'string') {\n    taskId = obj.taskId.trim();\n  }\n\n  // 匹配 imageBasePath\n  if (obj.imageBasePath && typeof obj.imageBasePath === 'string') {\n    imageBasePath = obj.imageBasePath.trim();\n  }\n\n  // 数组递归\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      findKeys(item);\n      if (taskId && imageBasePath) return;\n    }\n    return;\n  }\n\n  // 对象递归\n  if (typeof obj === 'object') {\n    for (const v of Object.values(obj)) {\n      findKeys(v);\n      if (taskId && imageBasePath) return;\n    }\n  }\n}\n\n// 开始全量搜索\nfindKeys(exec);\n\n// 拼接最终路径（自动处理多余/缺失斜杠）\nlet finalPath = null;\nif (imageBasePath && taskId) {\n  finalPath = imageBasePath.replace(/\\/+$/, '') + '/' + taskId;\n}\n\nreturn {\n  taskId,\n  imageBasePath,\n  finalPath,\n  found: !!(taskId && imageBasePath)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "cdceba4a-c024-4aa7-8ae8-1943378c8a8e",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get an execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Get an execution": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "65236e0b-0883-4197-86ba-a7961ed1b752",
+  "activeVersionId": "c467480f-be53-40f2-9f57-596c67ade57e",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-21T08:58:22.648Z",
+      "createdAt": "2026-05-21T08:58:22.648Z",
+      "role": "workflow:owner",
+      "workflowId": "2a6zMefKIzJqwr8k",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-06-11T07:13:45.532Z",
+    "createdAt": "2026-06-11T07:13:44.144Z",
+    "versionId": "c467480f-be53-40f2-9f57-596c67ade57e",
+    "workflowId": "2a6zMefKIzJqwr8k",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "d7d468e0-30a6-4a1f-ad7d-a26e8507ee51",
+        "name": "Error Trigger",
+        "alwaysOutputData": false,
+        "notesInFlow": false
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://ai.weetar.com/api/aplus_image/task_result",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\"task_id\": \"{{ $json.taskId }}\", \n\"file_path\": [\"{{ $json.finalPath }}\"], \n\"nsfw\": 0, \n\"mark\": \"aplus_image\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          848,
+          0
+        ],
+        "id": "69a513e3-07a6-4874-87fa-e670b7dfa303",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "resource": "execution",
+          "operation": "get",
+          "executionId": "={{ $json.execution.id }}",
+          "options": {
+            "activeWorkflows": true
+          },
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.n8n",
+        "typeVersion": 1,
+        "position": [
+          288,
+          0
+        ],
+        "id": "ff2b43bb-326e-4744-b28b-c363cead40f2",
+        "name": "Get an execution",
+        "credentials": {
+          "n8nApi": {
+            "id": "SYaFd3PggBJZ8U4E",
+            "name": "n8n account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const exec = $input.first().json;\n\nlet taskId = null;\nlet imageBasePath = null;\n\n// ---------- 递归：同时找 taskId + imageBasePath ----------\nfunction findKeys(obj) {\n  if (!obj || (taskId && imageBasePath)) return;\n\n  // 匹配 taskId\n  if (obj.taskId && typeof obj.taskId === 'string') {\n    taskId = obj.taskId.trim();\n  }\n\n  // 匹配 imageBasePath\n  if (obj.imageBasePath && typeof obj.imageBasePath === 'string') {\n    imageBasePath = obj.imageBasePath.trim();\n  }\n\n  // 数组递归\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      findKeys(item);\n      if (taskId && imageBasePath) return;\n    }\n    return;\n  }\n\n  // 对象递归\n  if (typeof obj === 'object') {\n    for (const v of Object.values(obj)) {\n      findKeys(v);\n      if (taskId && imageBasePath) return;\n    }\n  }\n}\n\n// 开始全量搜索\nfindKeys(exec);\n\n// 拼接最终路径（自动处理多余/缺失斜杠）\nlet finalPath = null;\nif (imageBasePath && taskId) {\n  finalPath = imageBasePath.replace(/\\/+$/, '') + '/' + taskId;\n}\n\nreturn {\n  taskId,\n  imageBasePath,\n  finalPath,\n  found: !!(taskId && imageBasePath)\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          560,
+          0
+        ],
+        "id": "cdceba4a-c024-4aa7-8ae8-1943378c8a8e",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get an execution",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          []
+        ]
+      },
+      "Get an execution": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Nice Nice",
+    "name": "Version c467480f",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
