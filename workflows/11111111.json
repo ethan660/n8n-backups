@@ -1,0 +1,352 @@
+{
+  "updatedAt": "2026-04-08T06:18:36.927Z",
+  "createdAt": "2026-01-29T06:50:24.439Z",
+  "id": "cWP6KQYZnGA8haCavbZIt",
+  "name": "11111111",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hello! I am your e-commerce visual consultant. Please upload product images and tell me your selling points (e.g., sofas, sold to the US, French chic style).",
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -512,
+        400
+      ],
+      "id": "2324c83a-6e7d-4657-a088-8c3e77c5d25b",
+      "name": "When chat message received",
+      "webhookId": "192c487d-a9d6-410f-9071-e446ca480fee"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const text = item.json?.['chatInput'] ?? '';\n  const bin = item.binary || {};\n  const imageKeys = Object.keys(bin).filter(k => /^data(\\d+)?$/.test(k) || k.startsWith('data'));\n\n  if (imageKeys.length === 0) {\n    outputs.push({ json: { text_11: text, filename: '', image_url_full: '' } });\n    continue;\n  }\n\n  for (const key of imageKeys) {\n    const meta = bin[key] || {};\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n    const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n    const filename = meta.fileName || meta.filename || key;\n\n    outputs.push({\n      json: {\n        text_11: text,\n        filename,\n        image_url_full: `${base64}`\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { text_11: '', filename: '', image_url_full: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        400
+      ],
+      "id": "2b54e7d6-bdbc-448a-8371-68e57bcd25f9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"result\": \"{{ $json.final_prompt }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        400
+      ],
+      "id": "84dfe26c-494b-4adf-847b-d01ec88f0039",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"# Role|你是一位拥有10年经验的亚马逊资深视觉创意总监，精通美国市场消费心理学与电商转化率（CVR）视觉设计。# Task请分析用户提供的产品背景信息（目标市场、平台、卖点等），为该产品量身定制 4 种电商详情页设计风格建议。# Output Strategy你的分析需要基于以下审美逻辑：1. 市场契合度：根据目标市场偏好的偏好，从明亮、高对比度、真实且具有代入感的画面等方向考虑。2. 产品特性：例如（针对仿真花，重点在于“去塑料感”、“生命力”与“空间氛围”）。# Output Format (Strictly Follow)输出必须严格遵守以下格式，每行一个风格，不要包含任何前导词、解释或多余符号：风格名称1：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称2：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称3：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称4：简短的描述，#791c1c, #FFFFFF, #EAEAEA各种风格[提供 3 个 Hex 颜色代码，例如 #791c1c, #FFFFFF, #EAEAEA]# Example始终用，中文输出温馨居家：营造居家舒适氛围。#791c1c, #FFFFFF, #EAEAEA。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：{{ $json.integrated_info }}\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $json.mimeType || 'image/jpeg' }}\", \n            \"data\": \"\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        400
+      ],
+      "id": "9fc9c8a0-a680-40c1-b548-d647f25ed660",
+      "name": "HTTP gemini-2."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v));\n\nconst clean = (s) => {\n  let t = toStr(s);\n  t = t.replace(/```[\\s\\S]*?```/g, '');\n  t = t.replace(/\\*\\*(.*?)\\*\\*/g, '$1');\n  t = t.replace(/^\\s*#{1,6}\\s+/gm, '');\n  t = t.replace(/[\"']/g, '');\n  t = t.replace(/\\n\\s*\\n\\s*\\n/g, '\\n\\n').trim();\n  t = t.replace(/\\r?\\n/g, '').replace(/\\\\n/g, '');\n  return t;\n};\n\nconst extractText = (resp) => {\n  const parts = resp?.candidates?.[0]?.content?.parts;\n  if (Array.isArray(parts)) {\n    const joined = parts.filter(p => p.text !== undefined).map(p => String(p.text)).join('\\n');\n    return clean(joined);\n  }\n  const fallback = toStr(resp?.text || resp?.content || resp?.message?.content);\n  return clean(fallback);\n};\n\nconst outputs = items.map((item) => {\n  const response = item.json || {};\n  const final_prompt = extractText(response);\n  return { json: { final_prompt } };\n});\n\nreturn outputs.length ? outputs : [{ json: { final_prompt: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        400
+      ],
+      "id": "740e8138-b84c-4b2f-9aae-d07117e3f88d",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Credentials",
+                "value": "true"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET,POST,PUT,OPTIONS,DELETE"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Transfer-Encoding",
+                "value": "chunked"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -496,
+        48
+      ],
+      "id": "14d4a2a5-4b5c-4adc-a48a-bf788c699de4",
+      "name": "Webhook",
+      "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toText = (obj, key, fallback) => {\n  const v = obj?.[key];\n  if (v == null) return fallback;\n  if (Array.isArray(v)) return v.map(e => String(e).trim()).filter(Boolean).join('，') || fallback;\n  const s = String(v).trim();\n  return s || fallback;\n};\n\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  const json = item.json || {};\n\n  const market = toText(json, '目标市场', '未指定');\n  const platform = toText(json, '目标平台', '未指定');\n  const language = toText(json, '文案语言', '未指定');\n  const aspect_ratio = toText(json, '图片比例', '1:1');\n  const selling_points = toText(json, '核心卖点', '未提供');\n\n  const integrated = `### 电商产品背景信息\n- 目标市场: ${market}\n- 目标平台: ${platform}\n- 文案语言: ${language}\n- 图片比例: ${aspect_ratio}\n- 产品核心卖点: ${selling_points}\n\n请基于以上信息，为该产品设计一个专业、吸引人的电商详情页设计风格概述。`.trim();\n\n  const bin = item.binary || {};\n  const keys = Object.keys(bin);\n  const urls = [];\n\n  for (const key of keys) {\n    const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n    const base64 = Buffer.isBuffer(buffer) ? buffer.toString('base64') : Buffer.from(buffer).toString('base64');\n    const meta = bin[key] || {};\n    const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n    urls.push(`data:${mime};base64,${base64}`);\n  }\n\n  outputs.push({\n    json: {\n      integrated_info: integrated,\n      image_url_full: urls.length === 1 ? urls[0] : '',\n      image_urls_full: urls\n    }\n  });\n}\n\nreturn outputs.length ? outputs : [{ json: { integrated_info: '', image_url_full: '', image_urls_full: [] } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        256
+      ],
+      "id": "0a183070-3503-4eaa-a363-abd9906a2ad5",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -160
+      ],
+      "id": "70f1cb51-f912-497b-9f2e-e779b621630a",
+      "name": "Create a document"
+    },
+    {
+      "parameters": {
+        "resource": "database",
+        "databaseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        1296,
+        400
+      ],
+      "id": "afaf18cd-bb67-44d8-8394-2455e043412a",
+      "name": "Get a database"
+    },
+    {
+      "parameters": {
+        "formTitle": "111",
+        "formDescription": "11",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "cp",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "cj",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -448,
+        688
+      ],
+      "id": "7d48179c-e74b-44e3-af72-ec064229006b",
+      "name": "On form submission",
+      "webhookId": "391d8467-a78e-43aa-af56-a24000736886"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Respond to Webhook": [
+      {
+        "json": {
+          "final_prompt": "自然写实：强调绢布花瓣与叶片的真实质感，通过柔和自然光展现“去塑料感”的生动细节，营造宛如鲜花的清新感。#C72E2E, #3A623A, #F0F0F0活力绽放：运用明亮高对比度光线，突出凤仙花鲜艳色彩与饱满形态，展现其为任何空间注入的强烈生命力与视觉冲击。#E70000, #5CB85C, #FFFFFF雅致生活：将仿真花融入多元居家场景，通过营造温馨或优雅的氛围，展现其提升空间美感、带来美好生活体验的能力。#B22222, #6B8E23, #F5DEB3精工细节：特写展示绢布花朵的精细纹理和可拆卸叶片的实用性，突出产品材质的高级感与制作工艺的卓越。#C03030, #4A754A, #E8E8E8"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "final_prompt": "明亮自然：模拟自然光线，强调花朵的鲜活与绢布材质的真实质感，营造清新花园氛围。#E83A3A, #3B6D3B, #F8F8F8现代极简：以简洁背景突出凤仙花鲜艳色彩和优雅形态，展现现代家居的精致格调。#CC2222, #2E4A2E, #E0E0E0田园质朴：融入温暖的木质与编织元素，通过柔和光线展现花朵的温馨与自然亲和力。#D84C4C, #5A7B5A, #C7A88C活力奔放：运用高对比度和鲜明色彩，强调凤仙花的丰盛与视觉冲击力，激发装饰热情。#FF0000, #1E601E, #F0F0F0"
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      }
+    ],
+    "Code in JavaScript11": [
+      {
+        "json": {
+          "final_prompt": "自然写实：强调绢布花瓣与叶片的真实质感，通过柔和自然光展现“去塑料感”的生动细节，营造宛如鲜花的清新感。#C72E2E, #3A623A, #F0F0F0活力绽放：运用明亮高对比度光线，突出凤仙花鲜艳色彩与饱满形态，展现其为任何空间注入的强烈生命力与视觉冲击。#E70000, #5CB85C, #FFFFFF雅致生活：将仿真花融入多元居家场景，通过营造温馨或优雅的氛围，展现其提升空间美感、带来美好生活体验的能力。#B22222, #6B8E23, #F5DEB3精工细节：特写展示绢布花朵的精细纹理和可拆卸叶片的实用性，突出产品材质的高级感与制作工艺的卓越。#C03030, #4A754A, #E8E8E8"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "final_prompt": "明亮自然：模拟自然光线，强调花朵的鲜活与绢布材质的真实质感，营造清新花园氛围。#E83A3A, #3B6D3B, #F8F8F8现代极简：以简洁背景突出凤仙花鲜艳色彩和优雅形态，展现现代家居的精致格调。#CC2222, #2E4A2E, #E0E0E0田园质朴：融入温暖的木质与编织元素，通过柔和光线展现花朵的温馨与自然亲和力。#D84C4C, #5A7B5A, #C7A88C活力奔放：运用高对比度和鲜明色彩，强调凤仙花的丰盛与视觉冲击力，激发装饰热情。#FF0000, #1E601E, #F0F0F0"
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      }
+    ]
+  },
+  "versionId": "d0e01489-1832-48c8-a076-eb3ce5edbffd",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-29T06:50:24.439Z",
+      "createdAt": "2026-01-29T06:50:24.439Z",
+      "role": "workflow:owner",
+      "workflowId": "cWP6KQYZnGA8haCavbZIt",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
