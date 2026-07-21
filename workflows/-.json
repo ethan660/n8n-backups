@@ -1,0 +1,189 @@
+{
+  "updatedAt": "2026-05-22T01:04:01.079Z",
+  "createdAt": "2026-05-22T01:04:01.079Z",
+  "id": "wt1qrNgAqpRY5771",
+  "name": "轮询图片工作流-获取生成的图片",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "poll-image",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        112
+      ],
+      "id": "95298aa3-d7d0-431a-93ce-d87c1c780013",
+      "name": "轮询图片Webhook",
+      "webhookId": "poll-image"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 从 URL 参数获取 taskId 和 imageKey\nconst query = $input.item.json.query || {};\nconst taskId = query.taskId || '';\nconst imageKey = query.imageKey || '';\n\nif (!taskId || !imageKey) {\n  return [{ json: { error: '缺少参数 taskId 或 imageKey' } }];\n}\n\n// 计算完整文件路径\nconst basePath = '/home/node/.n8n-files/storage/images';\nconst fullImagePath = `${basePath}/${taskId}/${imageKey}.png`;\n\nreturn [{ json: { taskId, imageKey, fullImagePath } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        112
+      ],
+      "id": "20305a26-5270-48f1-8219-2e201a2bcf31",
+      "name": "解析参数"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        112
+      ],
+      "id": "8a367dab-eb4e-45c6-9b62-01e3769bcd1f",
+      "name": "读取图片文件"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "condition-binary",
+              "leftValue": "={{ $binary.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        112
+      ],
+      "id": "1d2d3740-9773-40dc-b3b2-95dcfa931c78",
+      "name": "文件存在？"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 404,\n  \"status\": \"pending\",\n  \"message\": \"图片尚未生成，请稍后再试\",\n  \"taskId\": \"={{ $('解析参数').first().json.taskId }}\",\n  \"imageKey\": \"={{ $('解析参数').first().json.imageKey }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b9cffd3a-01db-400a-ac3d-4fc32e1005c0",
+      "name": "返回pending"
+    },
+    {
+      "parameters": {
+        "respondWith": "binaryData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        208
+      ],
+      "id": "908f415d-f4b5-4902-91a3-7bc1d8cff47b",
+      "name": "返回图片"
+    }
+  ],
+  "connections": {
+    "轮询图片Webhook": {
+      "main": [
+        [
+          {
+            "node": "解析参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析参数": {
+      "main": [
+        [
+          {
+            "node": "读取图片文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取图片文件": {
+      "main": [
+        [
+          {
+            "node": "文件存在？",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文件存在？": {
+      "main": [
+        [
+          {
+            "node": "返回pending",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "返回图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "22063739-a596-4224-a510-7e0d9549e823",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-22T01:04:01.079Z",
+      "createdAt": "2026-05-22T01:04:01.079Z",
+      "role": "workflow:owner",
+      "workflowId": "wt1qrNgAqpRY5771",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
