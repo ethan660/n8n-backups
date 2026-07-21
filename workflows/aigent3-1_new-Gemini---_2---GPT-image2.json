@@ -1,0 +1,2190 @@
+{
+  "updatedAt": "2026-06-12T01:02:26.236Z",
+  "createdAt": "2026-06-12T00:40:36.220Z",
+  "id": "Q0hePD6uG3zAfGo9",
+  "name": "电商aigent3-1(产品图+参考图构图)new-Gemini---已发布2---GPT-image2模型",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// ================================================ \n// 获取 taskId，计算完整路径，按顺序命名图片 \n// 统一 binary 键名为 data，重命名 fileName 为 img_1.png 格式 \n// 同时创建日期+taskId的文件夹 \n// ================================================ \n\nconst fs = require('fs'); \nconst path = require('path'); \n\nconst allItems = $input.all(); \n\n// 尝试多种方式获取 taskId \nlet taskId = ''; \n\n// 方式1：从当前节点的 json 中获取 \nconst firstItem = allItems[0] || {}; \nif (firstItem.json?.taskId) { \n  taskId = firstItem.json.taskId; \n} \n\n// 方式2：从\"path\"节点获取（生成ID的节点） \nif (!taskId) { \n  try { \n    const basePathItems = $('path').all(); \n    if (basePathItems && basePathItems.length > 0) { \n      taskId = basePathItems[0].json?.taskId || ''; \n    } \n  } catch (e) { \n    console.log('无法从 path 获取 taskId'); \n  } \n} \n\n// 方式3：从 Respond to Webhook2 节点获取 \nif (!taskId) { \n  try { \n    const respondItems = $('Respond to Webhook2').all(); \n    if (respondItems && respondItems.length > 0) { \n      taskId = respondItems[0].json?.taskId || ''; \n    } \n  } catch (e) { \n    console.log('无法从 Respond to Webhook2 获取 taskId'); \n  } \n} \n\n// 如果还是没有，使用时间戳作为备用 \nif (!taskId) { \n  console.log('警告: 未找到 taskId，使用时间戳作为备用'); \n  taskId = `task_${Date.now()}`; \n} \n\nconsole.log('获取到的 taskId:', taskId); \n\n// 生成日期文件夹路径 \nconst now = new Date(); \nconst yyyy = String(now.getFullYear()); \nconst mm = String(now.getMonth() + 1).padStart(2, '0'); \nconst dd = String(now.getDate()).padStart(2, '0'); \n\n// 文件夹路径 = 基础路径/日期/taskId \nconst basePath = '/home/node/.n8n/AI-WEB'; \nconst folderPath = path.join(basePath, yyyy, mm, dd, taskId); \n\n// 创建文件夹（如果不存在） \nlet created = false; \nif (!fs.existsSync(folderPath)) { \n  fs.mkdirSync(folderPath, { recursive: true }); \n  created = true; \n  console.log('创建文件夹:', folderPath); \n} \n\n// 按顺序为每个 item 分配图片编号（img_1, img_2, img_3...） \nreturn allItems.map((item, index) => { \n  // 修改命名方式：img_1, img_2, img_3... \n  const imageName = `img_${index + 1}`; \n  const fullImagePath = `${folderPath}/${imageName}.png`; \n    \n  // 获取原始 binary 数据 \n  const originalBinary = item.binary || {}; \n    \n  // 修改 binary：将所有键名统一为 \"data\"，fileName 改为 img_X.png 格式 \n  const modifiedBinary = {}; \n    \n  // 取第一个 binary 数据的属性作为模板 \n  const firstKey = Object.keys(originalBinary)[0]; \n  const templateData = firstKey ? originalBinary[firstKey] : {}; \n    \n  // 获取原始扩展名 \n  const extension = (templateData.fileName || 'image.png').split('.').pop() || 'png'; \n  // 新文件名：img_1.png, img_2.png... \n  const newFileName = `${imageName}.${extension}`; \n    \n  // 统一键名为 \"data\" \n  modifiedBinary['data'] = { \n    ...templateData, \n    fileName: newFileName \n  }; \n    \n  console.log(`生成文件: ${newFileName}`); \n    \n  return { \n    json: { \n      ...item.json, \n      taskId: taskId, \n      basePath: basePath, \n      imageName: imageName, \n      fullImagePath: fullImagePath, \n      // 传递给 Read/Write Files from Disk \n      savePath: fullImagePath, \n      // 用于创建文件夹 \n      folderPath: folderPath, \n      created: created, \n      year: yyyy, \n      month: mm, \n      day: dd \n    }, \n    binary: modifiedBinary \n  }; \n}); "
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6528,
+        416
+      ],
+      "id": "81f8f0d6-d81b-4d56-9ede-5624951bd464",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        320
+      ],
+      "id": "7a1a36d7-5fcb-4343-a691-0cfde7cbd192",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        320
+      ],
+      "id": "ceea2263-bb11-48aa-a1ac-840c704e93d8",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "={{ Object.keys($binary)[0] }}",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        320
+      ],
+      "id": "8a44c597-ad75-4ebe-b5f3-74ae618ee984",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f4fcc18-251f-4642-9bc7-3ada98180fc7",
+              "name": "",
+              "value": "={{ $('Webhook').item.json.body[\"Product Information\"] }}",
+              "type": "string"
+            },
+            {
+              "id": "706563f9-734e-413f-bc21-859c1c9fc7fc",
+              "name": "body.name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "3ad5e7c3-5d67-4f34-8f95-6ec510262cae",
+              "name": "body.number",
+              "value": "={{ $('Webhook').item.json.body.number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2320,
+        320
+      ],
+      "id": "69a86734-756b-4b3d-b5de-2e1da9b02172",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d986655c-9ee9-4a2e-af9a-57f54c87a90d",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7b90dbd6-9302-43bc-8900-2e58b467714f",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "74bc473a-31da-4413-b8dd-eca1151dde2a",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "3"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        5600,
+        432
+      ],
+      "id": "b44e802a-8c2a-4dab-9858-a1ca90b50989",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2d4f615b-b8ec-4293-8aea-b48ce747c400",
+              "leftValue": "={{ Object.keys($binary)[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1424,
+        224
+      ],
+      "id": "a317bbec-cded-4cb6-906a-e158eff5fab8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        5824,
+        560
+      ],
+      "id": "96551089-0cbd-4c10-ac9e-51a5bfb912e7",
+      "name": "Loop Over Items2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        5824,
+        336
+      ],
+      "id": "a3a21bce-aa96-42b1-b40e-559bcc3dd006",
+      "name": "Loop Over Items3",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        5824,
+        128
+      ],
+      "id": "08c6fa70-195b-48d1-83da-2b7971fcb255",
+      "name": "Loop Over Items4",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：将上游所有数据原样传递，并为每个item添加图片数量统计\n// 返回：所有输入项，每个项的JSON中都增加了imageCount字段\n// ================================================\n\n// 遍历输入的所有 items\nfor (const item of $input.all()) {\n  // 动态计算当前 item 的 binary 中包含多少张图片\n  // 如果 item.binary 不存在，则其键的数量为 0\n  const calculatedImageCount = item.binary ? Object.keys(item.binary).length : 0;\n\n  // 将计算出的图片数量更新到 item 的 json 部分\n  item.json.imageCount = calculatedImageCount;\n\n  // 可选：打印日志信息用于调试\n  console.log(`Item ${item.json.image_key || 'unknown'} has ${calculatedImageCount} image(s) in its binary data.`);\n}\n\n// 返回所有经过处理的输入项\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5424,
+        208
+      ],
+      "id": "17b93f27-bb14-40bd-a358-450cd70b0de2",
+      "name": "计数1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能1：获取当前节点的输入数据（$input.all()）\n// 功能2：动态提取当前输入 binary 中所有的图片\n// 功能3：主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑）\n// 功能4：提取干净的 JSON 文字信息（适用于 HTTP 请求）\n// 返回：合并后的数据，包含输入 JSON + 所有图片 + Edit Fields 的图片 + 干净字符串\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 获取当前节点的输入数据（所有 items，通常是 1 个）\n    const inputItems = $input.all();\n    const firstInput = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputJson = firstInput.json || {};\n    const inputBinary = firstInput.binary || {};\n\n    // 2. 动态提取当前输入 binary 中所有的图片\n    const allImages = {};\n    let totalImageCount = 0;\n\n    Object.keys(inputBinary).forEach(key => {\n      // 不再限制特定前缀，直接提取所有 binary 图片\n      if (inputBinary[key]) {\n        allImages[key] = { ...inputBinary[key] };  // 深拷贝 binary 对象\n        totalImageCount++;\n      }\n    });\n\n    // 调试日志\n    console.log('当前输入 binary 总键数:', Object.keys(inputBinary).length);\n    console.log('提取到的图片数:', totalImageCount);\n    console.log('图片键名列表:', Object.keys(allImages));\n\n    // 3. 主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑：寻找 cpimage 开头）\n    let editFieldsImages = [];\n    let editFieldsBinary = {};\n    let editFieldsImageCount = 0;\n    let editFieldsConnected = false;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        editFieldsItems.forEach((item, idx) => {\n          const itemBinary = item.binary || {};\n\n          Object.keys(itemBinary).forEach(key => {\n            // 修正点：将 'ckimage' 改为 'cpimage'\n            if (key.startsWith('cpimage') && itemBinary[key]) {\n              const img = itemBinary[key];\n              editFieldsImages.push({\n                fieldName: key,\n                fileName: img.fileName || '',\n                mimeType: img.mimeType || '',\n                fileExtension: img.fileExtension || '',\n                fileSize: img.fileSize || '',\n                sourceItemIndex: idx\n              });\n\n              // 带前缀避免冲突\n              editFieldsBinary[`editFields_${key}_${idx}`] = itemBinary[key];\n              editFieldsImageCount++;\n            }\n          });\n        });\n\n        if (editFieldsImageCount > 0) {\n          editFieldsConnected = true;\n          console.log(`成功从 Edit Fields 节点提取 ${editFieldsImageCount} 张图片`);\n        }\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 失败:', editFieldsErr.message);\n    }\n\n    // ==========================================\n    // 新增功能：提取干净的文字信息 (Clean JSON String)\n    // ==========================================\n    let cleanJsonString = '';\n    try {\n      // 核心修复：使用 JSON.stringify 自动转义双引号 \" 和换行符 \\n\n      // 这样生成的字符串可以直接作为 JSON 值使用\n      cleanJsonString = JSON.stringify(inputJson);\n    } catch (jsonErr) {\n      console.log('生成干净字符串失败:', jsonErr.message);\n      cleanJsonString = JSON.stringify(inputJson); // 降级处理\n    }\n\n    // 4. 合并所有 binary：当前节点的所有图片 + Edit Fields 的 cpimage 图片\n    const mergedBinary = {\n      ...allImages,              // 所有图片\n      ...editFieldsBinary       // editFields_cpimageX_...\n    };\n\n    // 5. 返回结果\n    return [{\n      json: {\n        // 输入的原始 JSON 数据\n        inputData: inputJson,\n\n        // 当前节点的所有图片元数据\n        allImages: allImages,\n        totalImageCount: totalImageCount,\n        imageKeys: Object.keys(allImages),\n\n        // Edit Fields 的图片元数据（修正后）\n        editFieldsImages: editFieldsImages,\n        editFieldsImageCount: editFieldsImageCount,\n        editFieldsConnected: editFieldsConnected,\n\n        // 总计\n        finalTotalImageCount: Object.keys(mergedBinary).length,\n        source: 'merged_all_images_and_editFields',\n\n        // --- 新增字段：干净的 JSON 字符串 ---\n        cleanJsonString: cleanJsonString\n      },\n\n      // 合并后的 binary 数据\n      binary: mergedBinary\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4080,
+        208
+      ],
+      "id": "6728bcee-1570-47a1-985c-48315ce67130",
+      "name": "提取构图参考"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"你是一键生成 Amazon A+ 详情图的专业工作流助手，专注为用户提供符合 Amazon 平台标准的商品详情图设计方案。你的核心能力是通过结构化分析产品信息+用户上传的产品图和多张参考图片，输出精准适配的详情图设计方案。整个流程必须严格按照用户上传的参考图片布局走，不得自行重新发明布局。接收输入：产品文字信息（产品名称、品类、品牌定位、核心卖点、目标人群、语言版本等），多张 binary 图片（产品图+布局参考图），（需要生成的模块图数量{{ $('Edit Fields1').item.json.body.number }}）。核心技能（按顺序严格执行）：技能1:信息采集与分析，自动识别产品类目，判断核心风格方向。初步锁定适配的字体、配色体系（以用户提供的品牌色为主）。分析目标人群和核心卖点优先级。技能2:核心信息提炼，输出以下明确信息：产品类目及风格关键词（按品类匹配，如“简约科技、高级质感”等），核心卖点（按重要性排序），目标人群画像，视觉规范基础框架。重要约束：以上提炼的信息为整个生成流程的唯一风格与内容标准，后续所有图片必须严格遵循此标准，不得偏离。技能3: 模块文案规划：基于技能2提炼的核心卖点、目标人群画像、风格关键词和英语版本，为{{ $('Edit Fields1').item.json.body.number }}张图片规划独立、高转化的模块文案。 规则：每张图文案必须紧扣该图的核心卖点重点主标题控制在8-12字以内，副标题/描述句控制在15-20字以内每张图最多3条 bullet points文案语气符合品类特性（美妆柔美、专业、母婴温暖安心、运动户外活力等）所有文案最终必须使用用户指定的语言版本（若未指定默认英文）输出格式为每张图独立文案块，便于后续直接引用。技能4:参考图布局提取（必须执行），核心规则（最高优先级）：只提取参考图的结构与内容信息：产品主体位置、元素分布、排版方式、间距比例、视觉重心、场景类型、人物姿态与位置、产品角度、光影氛围、整体构图框架。严格禁止提取和复制：参考图中的任何文字内容、具体颜色方案、字体样式、logo、图标设计风格、按钮样式。人物必须正常提取（包括姿态、位置、数量、与产品的关系等）。目标是生成图片在构图和画面内容上达到80-90%相似度，但整体颜色、风格、文字内容必须100%使用本流程统一规划的配色与文案。执行步骤（按顺序严格执行）：分析用户上传的所有参考图片，识别每张图的核心构图特征，重点识别背景的环境丰富度（如：远景的山脉/建筑/天空层次，中景的植被/光影，前景的虚化元素），确保生成的画面具有真实的摄影景深感，而非简单的纯色背景。识别产品主体位置、元素分布、排版方式：1中心对齐，2左右对称，3上下分层,4网格,5斜轴引导、6留白比例1:1.5~1:3、7视觉重心等）。结合产品类目和Amazon A+常见模块，判断每张参考图最适合作为哪类A+图片的构图参考（主Banner、成分模块、场景展示、对比模块、细节特写等）。AI自动匹配：根据当前要生成的第N张A+图片的内容需求（卖点、文案），自动选择最匹配的参考图作为构图骨架。详细描述提取结果：只描述结构、位置、比例、场景、人物，不描述颜色和文字。使用以下步骤分析用户上传的所有参考图片：1.根据产品类目特性，分析每张图片的元素分布（产品主体 / 文字 / 人物 / 辅助图标 / 背景 /场景元素 ）的排列逻辑，包括排版方式（中心对齐 / 左右对称 / 上下分层 / 网格模块 / 斜轴引导等）、间距（留白比例 1:1.5~1:3）、视觉重心。2.结合亚马逊 A+ 常见布局模板，明确每张图片的布局类型（1.主体居中+文字叠加、2.双图左右对比、3.场景图+产品叠加、4.模块网格+参数表、5.步骤流程+产品展示、6.情绪氛围+产品点缀等）。3.标注关键元素占比（精确到 5% 单位），并说明留白策略与视觉焦点引导逻辑。4.输出格式必须为：图1：布局类型：... 排列结构：... 元素占比：...  图2：...（按实际上传图片数量输出）。技能5:套图规格规范（严格基于布局提取结果），根据用户要求的{{ $('Edit Fields1').item.json.body.number }}张图片数量，为每张图指定模块尺寸（默认使用16：9）。为每张图明确：模块类型（Hero Banner、功能展示、细节特写等），参考图布局提取结果（直接复制技能3的对应输出），推荐排列结构（必须忠实于参考图布局，不得大幅修改），元素占比与留白策略。文字颜色策略（根据背景明暗自动切换黑白，严禁添加白色背景框。技能6:风格与字体适配，根据产品类目、风格关键词和用户提供的品牌定位，选择适配字体。基础字体体系：Inter（正文）、Montserrat（标题）、SF Pro（强调）等。严格控制单图内字体种类 ≤ 2 种。输出：主字体、标题字体、强调字体 + 具体 px 和字重建议。技能7:配色与转化重点，以用户提供的品牌色/主色调为主（{{ $('Edit Fields1').item.json.body.color }}），结合品类特性制定配色方案。。基础色：黑/白/深灰。品牌色 + 点缀色（总色种严格 ≤ 4 种）。衍生色：基于品牌色提取一个“低透明度版本”，确保画面层次感。确保正文与背景对比度 ≥ 4.5:1（WCAG 合规）。说明配色与产品定位的绑定关系，以及品类转化重点（科技感、质感、安全感、场景感等）。技能8:设计红线规避，禁止使用过细字体（<10px）、Comic Sans、Impact 等禁用字体。禁止高饱和撞色、信息密度过高。所有输出必须可直接用于 Canva / PS 执行.禁止给主标题/副标题添加白色或纯色的矩形背景底框，文字必须直接叠加在图片上，依靠文字颜色（黑/白）或微弱投影来保证清晰度。输出格式（必须严格遵守以下5大部分结构）：1.(产品核心信息)◦ 产品类目: ◦ 核心风格: ◦ 目标人群: ◦ 核心卖点:（按重要性排序）2.(Amazon A+套图规格清单)（最重要部分）◦ 图1（16：9）： 用于：第X张A+图（例如：主Banner / 成分展示 / 场景使用图） 布局类型：主体居中+文字分层（示例） 排列结构：顶部留白 + 中部产品主体放大占据65%面积，人物位于右侧与产品互动，底部自然过渡 元素占比：产品主体65%、人物/场景元素25%、留白10% 构图关键提取：产品采用XX角度特写，人物XX姿态置于XX位置，整体采用上下分层构图，留白比例约1:2.5，文案内容:主标题，副标题，卖点描述，（按每张图的需要）（按{{ $('Edit Fields1').item.json.body.number }}张依次输出，）3.(风格与字体方案)◦ 主字体: ◦ 标题字体: ◦ 强调字体: 4.(配色方案)◦ 基础色: ◦ 品牌色: ◦ 点缀色: ◦ 配色逻辑: 5.(Amazon A+ 详情图核心逻辑)- 整体设计说明（信息层级、转化重点、移动端友好等）。设计红线自查结果。严格限制：仅基于用户提供的产品信息和上传的参考图片生成方案，无需外部搜索。布局必须100%忠实于用户上传参考图片的分析结果（技能3），不得自行重新设计构图。不生成任何图片，仅输出结构化、可直接落地的设计参数与逻辑框架。颜色以用户提供的品牌色/主色调为准。现在开始处理用户输入的产品信息和上传的多张参考图片，按照以上技能顺序执行，直接输出5大部分结构化设计方案。禁止客套，问候语，禁止特殊符号，禁止空格换行和。括号只能用“()”不能用其他的括号,禁止/n\\n\\n，输出纯文本一整段\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $json.productInfo }}\"\n        },\n        {\n          \"text\": \"产品图：\"\n        },\n        {{ $json.base64_cpimage.map(base64 => `{\n          \"inline_data\": {\n            \"mime_type\": \"image/webp\",\n            \"data\": \"${base64}\"\n          }\n        }`).join(',') }}\n        ,\n        {\n          \"text\": \"参考图：\"\n        },\n        {{ $json.base64_ckimage.map(base64 => `{\n          \"inline_data\": {\n            \"mime_type\": \"image/webp\",\n            \"data\": \"${base64}\"\n          }\n        }`).join(',') }}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3632,
+        208
+      ],
+      "id": "2e684e3b-ba0e-4c36-9a2f-ec01b6af4d3a",
+      "name": "HTTP gemini-2.2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"你是一名专业电商精英设计师，精通视觉语言与用户心理，擅长通过精准单图聚焦、场景化文案、卖点配标与痛点分析，打造 “一眼动心、一看就懂、一键下单” 的 Amazon A + 爆款详情页。核心任务是根据上游超级 Agent输出的完整结构化设计方案，为 {{ $('Edit Fields1').item.json.body.number }}张图片生成独立、高质量、可直接喂nanobanana/Midjourney/Flux/SD等工具的完整生成Prompt。你接收以下: {{ $('Edit Fields1').item.json.body.number }}。执行步骤必须严格按顺序：1.完整读取上游设计方案，尤其是技能3规划的每张图文案内容、技能4的参考图布局提取、技能7的指定配色、技能6的指定字体。2. 根据每张图的布局结构，排列方式、元素占比、视觉重心、留白比例，生成提示词。3. 必须100%使用上游已规划好的文案（主标题、副标题、卖点描述），不可自行改写或提炼，只做必要英文翻译（若上游为中文）。4. 融合字体、颜色、产品调性三位一体，确保高端科技感或品类对应质感。5. 生成每张图的完整 Prompt 时，必须包含：布局描述，直接使用提供的排列结构、精确颜色，HEX、字体描述、真实文案内容，（严格使用上游提供的文案）。输出格式必须严格遵守，一字不改：第 1 张图片（16：9）：主视觉素材 + 文案 + 生成场景提示，第 2 张图片（16：9）：[...]，按{{ $('Edit Fields1').item.json.body.number }}输出。限制红线：绝对不可改变提供的布局结构和元素占比，颜色必须 100% 使用指定配色，无版权通用色，附 WCAG 对比度≥4.5:1，小语种需规避文化禁忌，禁止使用参考图原始颜色，总色种≤4 种，禁止任何解释、前言、总结，只输出上面格式的 N 张 Prompt，文案内容禁止使用中文，要用{{ $('Edit Fields1').item.json.body.language }}，输出纯文本内容，不要加特殊符号，和换行符。现在开始处理用户提供的 design_scheme JSON，直接按要求输出 {{ $('Edit Fields1').item.json.body.number }} 张图片生成 Prompt。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $('Code in JavaScript1').item.json.productInfo }}\"\n        },\n        {\n          \"text\": \"以下是上游超级 Agent 提供的设计方案结构化数据（JSON）：{{ $json.inputData.output }}\"\n        },\n        {{ $json.base64_list.map(base64 => `{\n          \"inline_data\": {\n            \"mime_type\": \"image/webp\",\n            \"data\": \"${base64.data}\"\n          }\n        }`).join(',') }}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4528,
+        208
+      ],
+      "id": "1b48846c-15b5-4aa3-9127-cb152d8c5b1d",
+      "name": "HTTP gemini-2.",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'ckimage' 和 'cpimage' 开头的 binary 图片\n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'ckimage' 和 'cpimage' 开头的图片\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：同时检查 'ckimage' 和 'cpimage' 前缀\n          if (key.startsWith('ckimage') || key.startsWith('ckimage')) {\n            // 重命名：保持原名或改成 ckimage_0, ckimage_1 等（这里保留原名，避免冲突）\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志\n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的图片数:', extractedImageCount);\n    console.log('提取到的图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果\n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据\n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据\n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息\n        source: 'extracted_ckimage_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的图片的 binary 数据\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        400
+      ],
+      "id": "01582eb8-cffc-40ef-b8c0-fcf43365b975",
+      "name": "提取cpimage或者ckimage"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：安全转字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n// 获取上游的 chatInput (保持你原有的逻辑)\nconst getChatInput = () => {\n  try {\n    // ⚠️ 注意：请确认 'Code in JavaScript4' 是否真的是你存储 chatInput 的那个节点名称\n    // 如果不是，请改成正确的节点名字，或者如果当前节点就能拿到，直接读 $input.first().json.chatInput\n    const chatInput = toStr($input.first()?.json?.chatInput);\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\nconst base64_ckimage = [];\n\n// 遍历所有输入项 (虽然你的场景可能只有1项，但循环更稳健)\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  // 【关键】从 json 中获取动态的图片键名列表\n  // 你的数据里有一个字段叫 extractedImageKeys: [\"ckimage0\", \"ckimage1\", ...]\n  const imageKeys = item.json.extractedImageKeys || [];\n\n  // 如果没有找到动态列表，尝试用旧方法兜底（以防万一）\n  const keysToProcess = imageKeys.length > 0 \n    ? imageKeys \n    : Object.keys(item.binary || {}).filter(k => k.startsWith('ckimage') || k.startsWith('cpimage') || k.startsWith('image'));\n\n  for (const key of keysToProcess) {\n    try {\n      // 【核心】使用 helpers 读取二进制缓冲区 (完美支持 filesystem-v2)\n      // 参数：(当前项索引, 二进制字段名)\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      \n      if (buf) {\n        // 转换为 base64 字符串\n        const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n        \n        if (b64) {\n          // 如果需要带 MIME 头 (如 data:image/png;base64,...)，可以取消下面这行的注释\n          // const mimeType = item.binary[key]?.mimeType || 'image/png';\n          // base64_ckimage.push(`data:${mimeType};base64,${b64}`);\n          \n          // 仅推送纯 base64 字符串 (根据你的原代码逻辑)\n          base64_ckimage.push(b64);\n        }\n      }\n    } catch (error) {\n      console.warn(`跳过图片 ${key}: ${error.message}`);\n    }\n  }\n}\n\n// 返回单一结果，包含聊天输入和所有图片的 base64 列表\nreturn [{\n  json: {\n    chatInput,\n    base64_ckimage,\n    count: base64_ckimage.length // 额外返回一个数量，方便调试\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        400
+      ],
+      "id": "93ef98fa-3597-4a21-ad39-87dcef2bb8c9",
+      "name": "binary转换base64"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "99fddee7-bb43-4679-9a88-480b33ee4ea7",
+              "name": "output",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4752,
+        208
+      ],
+      "id": "ddb582cc-f707-401d-8840-17202f92ed23",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Function Item 节点代码\n// 功能：提取二进制图片转Base64 + 透传原始文字信息 + 清洗output数据\n// ================================================\n\n// 1. 获取当前项的原始 JSON 数据（透传上游文字信息）\nconst originalJson = $input.item.json;\n\n// 2. 获取所有输入项并提取 Base64 列表\nconst items = $input.all();\nconst base64_list = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  if (item.binary) {\n    for (const key of Object.keys(item.binary)) {\n      try {\n        const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n        base64_list.push({\n          mime_type: item.binary[key].mimeType || 'image/png',\n          data: buffer.toString('base64')\n        });\n      } catch (error) {\n        console.error(`读取二进制字段 ${key} 失败:`, error);\n      }\n    }\n  }\n}\n\n// 3. 清洗 output 数据中的特殊字符\nlet cleanedOutput = '';\nif (originalJson?.inputData?.output) {\n  const rawOutput = originalJson.inputData.output;\n  \n  cleanedOutput = rawOutput\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/\\\"/g, '\\\\\"')\n    .replace(/\\n/g, '\\\\n')\n    .replace(/\\r/g, '\\\\r')\n    .replace(/\\t/g, '\\\\t')\n    .trim();\n  \n  console.log('output 数据清洗完成');\n  console.log('原始长度:', rawOutput.length);\n  console.log('清洗后长度:', cleanedOutput.length);\n}\n\n// 4. 返回合并后的数据\nreturn [{\n  json: {\n    base64_list: base64_list,\n    total_images: base64_list.length,\n    inputData: {\n      ...originalJson,\n      output: cleanedOutput\n    },\n    originalOutput: originalJson?.inputData?.output || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4304,
+        208
+      ],
+      "id": "0ab5d2ec-b1f4-4787-806d-3d331b0bf19f",
+      "name": "binary转换base"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3184,
+        208
+      ],
+      "id": "055bb37b-97ca-4ea7-ba90-e4369f5ee5b4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================ \n// n8n Code 节点专用代码 \n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'cpimage' 开头的 binary 图片 \n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构 \n// ================================================ \n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据 \n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item \n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'cpimage' 开头的图片（不包括 ckimage）\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：只检查 'cpimage' 前缀，不包含 'ckimage'\n          if (key.startsWith('cpimage')) {\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象 \n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志 \n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的 cpimage 图片数:', extractedImageCount);\n    console.log('提取到的 cpimage 图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果 \n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据 \n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据 \n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息 \n        source: 'extracted_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的 cpimage 图片的 binary 数据 \n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回 \nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        208
+      ],
+      "id": "704b5478-974d-43b0-ba8b-a5ca1e61bca2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：安全转字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n// 获取上游的 chatInput (保持你原有的逻辑)\nconst getChatInput = () => {\n  try {\n    const chatInput = toStr($input.first()?.json?.chatInput);\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\n\n// 【修改点】变量名从 base64_list 改为 base64_cpimage\nconst base64_cpimage = [];\n\n// 遍历所有输入项\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  // 从 json 中获取动态的图片键名列表\n  const imageKeys = item.json.extractedImageKeys || [];\n\n  // 如果没有找到动态列表，尝试用旧方法兜底\n  const keysToProcess = imageKeys.length > 0 \n    ? imageKeys \n    : Object.keys(item.binary || {}).filter(k => k.startsWith('ckimage') || k.startsWith('cpimage') || k.startsWith('image'));\n\n  for (const key of keysToProcess) {\n    try {\n      // 使用 helpers 读取二进制缓冲区\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      \n      if (buf) {\n        // 转换为 base64 字符串\n        const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n        \n        if (b64) {\n          // 【修改点】推入新变量名 base64_cpimage\n          base64_cpimage.push(b64);\n        }\n      }\n    } catch (error) {\n      console.warn(`跳过图片 ${key}: ${error.message}`);\n    }\n  }\n}\n\n// 【修改点】返回结果中使用新变量名 base64_cpimage\nreturn [{\n  json: {\n    chatInput,\n    base64_cpimage,       // 这里改了\n    count: base64_cpimage.length // 这里也对应改了\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2944,
+        208
+      ],
+      "id": "6fb569dd-e757-4a17-8e2e-31a54567cc57",
+      "name": "binary转换base64-"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================ \n// n8n Code 节点专用代码 \n// 功能1：提取 Edit Fields 节点中 cpimage 开头的图片\n// 功能2：从 Webhook 获取 ProductInformation 并处理成 JSON 格式\n// 功能3：收集 base64_cpimage 和 base64_ckimage 数据\n// ================================================ \n\nconst processAllData = () => {\n  try {\n    // ========== 功能1：处理 ProductInformation ==========\n    let productInfo = '';\n    \n    try {\n      // 从 Webhook 获取 ProductInformation\n      const webhookItem = $('Webhook').first();\n      if (webhookItem && webhookItem.json && webhookItem.json.body) {\n        productInfo = webhookItem.json.body['ProductInformation'] || '';\n      }\n    } catch (webhookErr) {\n      console.log('获取 Webhook 数据失败:', webhookErr.message);\n    }\n\n    // 处理 ProductInformation：清理特殊字符，使其成为有效的 JSON 字符串\n    let processedProductInfo = '';\n    if (productInfo) {\n      processedProductInfo = productInfo\n        .replace(/\\\\/g, '\\\\\\\\')\n        .replace(/\"/g, '\\\\\"')\n        .replace(/\\n/g, '\\\\n')\n        .replace(/\\r/g, '\\\\r')\n        .replace(/\\t/g, '\\\\t')\n        .trim();\n    }\n\n    // ========== 功能2：处理 base64_cpimage 和 base64_ckimage ==========\n    let base64_cpimage = [];\n    let base64_ckimage = [];\n    let chatInput = '';\n\n    const items = $input.all();\n    for (const item of items) {\n      if (item.json && item.json.base64_cpimage && Array.isArray(item.json.base64_cpimage)) {\n        base64_cpimage.push(...item.json.base64_cpimage);\n      }\n      \n      if (item.json && item.json.base64_ckimage && Array.isArray(item.json.base64_ckimage)) {\n        base64_ckimage.push(...item.json.base64_ckimage);\n      }\n\n      if (item.json && !chatInput && item.json.chatInput) {\n        chatInput = item.json.chatInput;\n      }\n    }\n\n    // ========== 功能3：从 Edit Fields 提取 cpimage 图片 ==========\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        Object.keys(editFieldsBinary).forEach(key => {\n          if (key.startsWith('cpimage')) {\n            extractedImages[key] = { ...editFieldsBinary[key] };\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n    }\n\n    // ========== 输出结果 ==========\n    const result = {\n      productInfo: processedProductInfo,\n      productInfoRaw: productInfo,\n      base64_cpimage: base64_cpimage,\n      base64_ckimage: base64_ckimage,\n      chatInput: chatInput,\n      extractedImages: extractedImages,\n      extractedImageCount: extractedImageCount,\n      extractedImageKeys: Object.keys(extractedImages),\n      source: 'processed_data_with_product_info'\n    };\n\n    console.log('ProductInformation 长度:', productInfo.length);\n    console.log('处理后 ProductInformation:', processedProductInfo.substring(0, 100) + '...');\n    console.log('base64_cpimage 数量:', base64_cpimage.length);\n    console.log('base64_ckimage 数量:', base64_ckimage.length);\n    console.log('提取的 cpimage 图片数:', extractedImageCount);\n\n    return [{\n      json: result,\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\nreturn processAllData();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        208
+      ],
+      "id": "ac51a579-e28e-4852-b1da-ced240487120",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点 - 提取描述和合并图像\n// 保留尺寸信息: \"第 1 张图片（1200X600）：描述...\"\n// ================================================\n\nlet text = '';\nconst descriptions = {};\nconst images = {};\nlet index = 0;\n\n// 1. 提取所有输入项的文本和 binary\nconst allItems = $input.all();\n\nfor (let i = 0; i < allItems.length; i++) {\n  const item = allItems[i];\n  \n  // 提取文本\n  if (item.json?.output && typeof item.json.output === 'string') {\n    text += item.json.output + '\\n';\n  }\n  \n  // 提取当前 item 的 binary\n  if (item.binary) {\n    for (const originalKey in item.binary) {\n      if (Object.prototype.hasOwnProperty.call(item.binary, originalKey)) {\n        const newKey = `${++index}图`;\n        images[newKey] = {\n          ...item.binary[originalKey],\n          sourceNode: 'current_input',\n          sourceField: originalKey,\n          originalIndex: i\n        };\n      }\n    }\n  }\n}\n\n// 2. 清洗文本\ntext = text\n  .replace(/^\\s*<\\|\\s*begin_of_box\\s*\\|>\\s*/i, '')\n  .replace(/\\s*<\\|\\s*end_of_box\\s*\\|>\\s*$/i, '')\n  .trim();\n\n// 3. 解析描述 - 保留尺寸信息\n// 格式: \"第 1 张图片（1200X600）：描述...\"\n// 捕获: 序号 + 完整尺寸括号 + 描述内容\nconst pattern = /第\\s*(\\d+)\\s*张图片([（(][^）)]+[）)])\\s*[：:]\\s*([\\s\\S]*?)(?=第\\s*\\d+\\s*张图片|$)/g;\n\nlet match;\nwhile ((match = pattern.exec(text)) !== null) {\n  const num = match[1];        // 序号: \"1\"\n  const size = match[2];      // 尺寸: \"（1200X600）\"\n  let value = match[3].trim().replace(/\\n+$/, '');\n  \n  if (value) {\n    // 将尺寸信息前置到描述中\n    const fullDescription = `第 ${num} 张图片${size}：${value}`;\n    descriptions[`${num}图`] = fullDescription;\n  }\n}\n\n// 4. 从 Edit Fields 节点提取 cpimage 开头的 binary\nlet editFieldsImageCount = 0;\nlet editFieldsConnected = false;\n\ntry {\n  let editFieldsNode;\n  try { editFieldsNode = $('Edit Fields'); } catch(e) {}\n  try { if (!editFieldsNode) editFieldsNode = $('Edit_Fields'); } catch(e) {}\n  try { if (!editFieldsNode) editFieldsNode = $('edit-fields'); } catch(e) {}\n  try { if (!editFieldsNode) editFieldsNode = $('Edit Fields2'); } catch(e) {}\n  \n  const editFieldsOutput = editFieldsNode ? editFieldsNode.all() : [];\n  \n  for (const item of editFieldsOutput) {\n    if (!item?.binary) continue;\n    \n    for (const key in item.binary) {\n      if (key.startsWith('cpimage')) {\n        const newKey = `${++index}图`;\n        images[newKey] = {\n          ...item.binary[key],\n          sourceNode: 'Edit Fields',\n          sourceField: key\n        };\n        editFieldsImageCount++;\n      }\n    }\n  }\n  \n  editFieldsConnected = editFieldsImageCount > 0;\n} catch (err) {\n  console.error(\"Edit Fields node error:\", err.message);\n}\n\n// 5. 验证并输出\nconst descCount = Object.keys(descriptions).length;\nconst imgCount = Object.keys(images).length;\n\n// 调试信息\nconsole.log('Descriptions:', descriptions);\nconsole.log('Images keys:', Object.keys(images));\n\n// 6. 返回 n8n 标准格式\nreturn [{\n  json: {\n    descriptions,\n    images: Object.keys(images),\n    imageCount: imgCount,\n    descriptionCount: descCount,\n    inputImageCount: index - editFieldsImageCount,\n    editFieldsImageCount,\n    editFieldsConnected,\n    matchedPairs: Object.keys(descriptions).filter(k => images[k]).length\n  },\n  binary: images\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4976,
+        208
+      ],
+      "id": "a7a3232a-32d3-4236-91a3-bdfbc58ee95d",
+      "name": "提示词分段提取图片1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入数据\nconst allItems = $input.all();\n\n// 假设所有的图片都在第一个输入 Item 中（通常 n8n 会把 binary 放在第一个 item 或均匀分布）\n// 我们先提取出所有的 binary 数据\nconst allBinaries = {};\nallItems.forEach(item => {\n  if (item.binary) {\n    Object.assign(allBinaries, item.binary);\n  }\n});\n\nlet results = [];\n\n// 遍历输入，提取 descriptions 下的所有图\n// 假设 descriptions 在第一个 Item 的 json 中\nconst descriptions = allItems[0].json.descriptions;\n\nfor (const key in descriptions) {\n  results.push({\n    json: {\n      image_key: key,            // 对应 \"1图\", \"2图\" 等\n      prompt: descriptions[key]  // 对应具体的描述文本\n    },\n    // 将之前收集到的所有二进制数据完整复制给每一个 item\n    binary: { ...allBinaries } \n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5200,
+        208
+      ],
+      "id": "bd055bd6-7f73-493d-8b1c-3ebf5be20719",
+      "name": "提示词图片排列组合"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "395ca466-1e30-4f01-9014-406e868fd7e7",
+              "name": "output",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3856,
+        208
+      ],
+      "id": "68f767c4-ce0a-4556-a9a9-50acf26cf06c",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 同时提取 ckimage 和 cpimage 开头的 binary\n// 只有两个前缀都存在图片时，才提取；否则不提取（binary 返回空）\n\nconst binary = $input.item.binary || {};\n\nconst hasCkimage = Object.keys(binary).some(key => key.startsWith('ckimage'));\nconst hasCpimage = Object.keys(binary).some(key => key.startsWith('cpimage'));\n\n// 只有两个前缀都存在，才进行提取\nif (!hasCkimage || !hasCpimage) {\n  console.log('缺少 ckimage 或 cpimage 前缀的图片，不进行提取');\n  return [{\n    json: {\n      message: \"缺少 ckimage 或 cpimage 前缀的图片，不提取 binary\",\n      hasCkimage: hasCkimage,\n      hasCpimage: hasCpimage,\n      extracted: false\n    },\n    binary: {}   // 不返回任何 binary\n  }];\n}\n\n// 两个前缀都存在，开始提取并重命名\nconst extractedBinary = {};\n\nlet index = 1;\n\n// 提取 ckimage 开头的\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('ckimage')) {\n    extractedBinary[`ckimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\n// 提取 cpimage 开头的（继续编号）\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('cpimage')) {\n    extractedBinary[`cpimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\nconsole.log(`成功提取 ckimage 和 cpimage 图片，共 ${index - 1} 张`);\n\nreturn [{\n  json: {\n    message: \"成功提取 ckimage 和 cpimage 的图片\",\n    ckimageCount: Object.keys(binary).filter(k => k.startsWith('ckimage')).length,\n    cpimageCount: Object.keys(binary).filter(k => k.startsWith('cpimage')).length,\n    extracted: true\n  },\n  binary: extractedBinary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        224
+      ],
+      "id": "e6b74e35-64c4-4646-be4e-5ba115678bce",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "1795c777-8f41-4efc-9afb-782647724168",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1200,
+        48
+      ],
+      "id": "66bd65d9-22f2-4d8d-9fa7-ab85dce82f93",
+      "name": "Webhook",
+      "webhookId": "1795c777-8f41-4efc-9afb-782647724168"
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "=1生成图像，根据prompt布置场景，无侵权风险。2.将产品{{ $('Edit Fields1').item.json.body.name }}替换进入图像内，且画面颜色风格与参考图产品适配。场景描述：{{ $json.prompt }}",
+        "referenceImages": "=1图",
+        "aspectRatio": "21:9",
+        "resolution": "2K",
+        "outputPropertyName": "1",
+        "options": {}
+      },
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        144
+      ],
+      "id": "be50ea32-c294-476f-9c0c-59e4b38ce0a5",
+      "name": "Nano Banana1",
+      "retryOnFail": true,
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "=1.生成图像，根据prompt布置场景，无侵权风险。2.将产品{{ $('Edit Fields1').item.json.body.name }}替换进入图像内，且画面颜色风格与参考图产品适配。场景描述：{{ $json.prompt }}",
+        "referenceImages": "1图\n2图",
+        "aspectRatio": "={{ $('字段校验').item.json.body.aspect_ratio }}",
+        "resolution": "2K",
+        "outputPropertyName": "2",
+        "options": {}
+      },
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        352
+      ],
+      "id": "64743946-afb2-4bc3-89ac-160288bdb5c8",
+      "name": "Nano Banana2",
+      "retryOnFail": true,
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "=1生成图像，根据prompt布置场景，无侵权风险。2.将产品{{ $('Edit Fields1').item.json.body.name }}替换进入图像内，且画面颜色风格与参考图产品适配。场景描述：{{ $json.prompt }}",
+        "referenceImages": "1图\n2图\n3图",
+        "aspectRatio": "={{ $('字段校验').item.json.body.aspect_ratio }}",
+        "resolution": "2K",
+        "outputPropertyName": "3",
+        "options": {}
+      },
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        576
+      ],
+      "id": "95f476a7-d847-4a92-90f1-269a1d28a70e",
+      "name": "Nano Banana3",
+      "retryOnFail": true,
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"taskId\": \"{{ $json.taskId }}\",\n  \"message\": \"图片正在生成中\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -672,
+        384
+      ],
+      "id": "84a13807-cce3-4756-a0ad-f2c29654c111",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6752,
+        416
+      ],
+      "id": "12edf42f-77bd-4f7c-a997-6ce8238fed33",
+      "name": "Loop Over Items5"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.folderPath }}/{{$binary.data.fileName}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        6976,
+        464
+      ],
+      "id": "f82234ab-c2b5-48f7-8336-b9af2312b0ba",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================================\n// 【1】获取当前节点的输入数据并处理图片路径\n// ==========================================\nconst items = $input.all();\nconst imagePaths = [];\nlet taskId = null;\n\nfor (const item of items) {\n    const json = item.json || {};\n\n    // 【防空】安全提取 taskId\n    if (json.taskId && !taskId) {\n        taskId = json.taskId;\n    }\n\n    // 【防空】安全提取并清洗图片路径\n    if (json.savePath && typeof json.savePath === 'string') {\n        const pathParts = json.savePath.split('/');\n        const yearIndex = pathParts.indexOf('2026');\n\n        if (yearIndex !== -1) {\n            const relativePath = '/' + pathParts.slice(yearIndex).join('/');\n            imagePaths.push(relativePath);\n        }\n    }\n}\n\n// ==========================================\n// 【2】核心：跨节点精准抓取启动时间（融入第二段的防空与异常捕获机制）\n// ==========================================\nlet startTime = null;\n\ntry {\n    // 使用 n8n 官方跨节点语法获取 path 节点的数据\n    const pathNodeData = $('path').first();\n    \n    // 确保数据存在且包含时间戳\n    if (pathNodeData?.json?.workflowStartTime) {\n        startTime = pathNodeData.json.workflowStartTime;\n    } else {\n        console.warn('⚠️ 成功访问了 path 节点，但未找到 workflowStartTime 字段');\n    }\n} catch (e) {\n    console.error('❌ 无法访问 path 节点，请检查节点名称是否准确为 \"path\"。错误信息:', e.message);\n}\n\n// 【兜底机制】如果抓取失败，使用当前时间防止报错\nif (!startTime) {\n    startTime = Date.now();\n    console.warn('⚠️ 未获取到有效的启动时间，耗时将显示为 0');\n}\n\n// ==========================================\n// 【3】计算运行耗时\n// ==========================================\nconst endTime = Date.now();\nconst durationMs = endTime - startTime;\n\n// 防止出现负数耗时（最小为 0）\nconst safeDurationMs = Math.max(0, durationMs);\n\n// 转换为秒，保留 2 位小数\nconst generateSpend = parseFloat((safeDurationMs / 1000).toFixed(2));\n\n// ==========================================\n// 【4】构建并返回输出数据\n// ==========================================\n// 提取第一条原始数据用于透传（防空处理）\nconst firstItemJson = items[0]?.json || {};\n\nreturn [{\n    json: {\n        // 【数据继承】将上游的所有原始数据原封不动地继承下来\n        ...firstItemJson, \n        \n        // 当前节点处理后的核心业务字段\n        taskId: taskId || 'unknown_task',\n        imageCount: imagePaths.length,\n        \n        // 【核心修改】直接输出标准的 JSON 数组，方便下游直接遍历使用\n        imagePaths: imagePaths, \n        paths: imagePaths,\n\n        // 运行耗时及状态字段\n        generate_spend: generateSpend,\n        status: \"completed\",\n        finished_at: new Date(endTime).toISOString(),\n        \n        // 调试字段（方便排查问题，确认无误后可删除）\n        _debug_start_time: startTime,   \n        _debug_duration_ms: safeDurationMs \n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6912,
+        272
+      ],
+      "id": "31cf42c1-1aaf-41c7-8339-83bfc2c09968",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.imageUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        224
+      ],
+      "id": "6eea7058-42e3-49fc-b905-0518f25d512a",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c756a138-fd00-476d-b9a8-f97c9d830a83",
+              "name": "body.name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "0ae268d2-f4ff-46cc-a6cb-c6fda4e006e5",
+              "name": "body.number",
+              "value": "={{ $json.body.number }}",
+              "type": "string"
+            },
+            {
+              "id": "23b1850a-7af3-4b1a-87c1-678821df7da2",
+              "name": "body.ProductInformation",
+              "value": "={{ $json.body.ProductInformation }}",
+              "type": "string"
+            },
+            {
+              "id": "e8684023-1694-43c6-9bb4-26894beffd6e",
+              "name": "ckimageUrls",
+              "value": "={{ $json.ckimageUrls }}",
+              "type": "array"
+            },
+            {
+              "id": "9e2ee3a1-fae1-4e56-a4c8-70d9c3f7abfb",
+              "name": "cpimageUrls",
+              "value": "={{ $json.cpimageUrls }}",
+              "type": "array"
+            },
+            {
+              "id": "9dae4446-8562-42c3-a995-919a87abcb6a",
+              "name": "body.language",
+              "value": "={{ $json.body.language }}",
+              "type": "string"
+            },
+            {
+              "id": "45c8380d-103a-4bd7-8904-eaca45475db7",
+              "name": "body.color",
+              "value": "={{ $json.body.color }}",
+              "type": "string"
+            },
+            {
+              "id": "f666efcc-5902-4953-9bd1-6613e186ceb9",
+              "name": "body.mark",
+              "value": "={{ $json.body.mark }}",
+              "type": "string"
+            },
+            {
+              "id": "50a09f24-c52c-4da1-9283-4e1a05d94b2e",
+              "name": "taskId",
+              "value": "={{ $json.taskId }}",
+              "type": "string"
+            },
+            {
+              "id": "741a4ad6-ca46-471f-85c9-8b398e2b84fc",
+              "name": "body.aspectRatio",
+              "value": "={{ $json.body.aspectRatio }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -288,
+        272
+      ],
+      "id": "5d06bb36-fd32-4f04-8c6d-19da44d00fae",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// 处理 ckimageUrls - 将每个图片地址拆分成单独的 item\n// ================================================\n\nconst items = $input.all();\nconst firstItem = items[0] || {};\nconst ckimageUrls = firstItem.json?.ckimageUrls || [];\n\nif (ckimageUrls.length === 0) {\n  console.log('警告: ckimageUrls 为空');\n  return [{ json: { error: '没有 ckimage 图片地址' } }];\n}\n\n// 将每个图片地址转换为一个 item\nconst results = ckimageUrls.map((url, index) => ({\n  json: {\n    imageUrl: url,\n    imageIndex: index + 1,\n    imageType: 'ckimage',\n    imageKey: `ckimage_${index + 1}`\n  }\n}));\n\nconsole.log(`处理 ${ckimageUrls.length} 个 ckimage 图片地址`);\nconsole.log('地址列表:', ckimageUrls);\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        176
+      ],
+      "id": "c0941af4-2283-4dc8-a362-47d081b48366",
+      "name": "ckimage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// 处理 cpimageUrls - 将每个图片地址拆分成单独的 item\n// ================================================\n\nconst items = $input.all();\nconst firstItem = items[0] || {};\nconst cpimageUrls = firstItem.json?.cpimageUrls || [];\n\nif (cpimageUrls.length === 0) {\n  console.log('警告: cpimageUrls 为空');\n  return [{ json: { error: '没有 cpimage 图片地址' } }];\n}\n\n// 将每个图片地址转换为一个 item\nconst results = cpimageUrls.map((url, index) => ({\n  json: {\n    imageUrl: url,\n    imageIndex: index + 1,\n    imageType: 'cpimage',\n    imageKey: `cpimage_${index + 1}`\n  }\n}));\n\nconsole.log(`处理 ${cpimageUrls.length} 个 cpimage 图片地址`);\nconsole.log('地址列表:', cpimageUrls);\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        560
+      ],
+      "id": "731b1072-f786-47b0-bea7-ff1671bc8542",
+      "name": "cpimage"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        304,
+        176
+      ],
+      "id": "cf0f1c7f-20fa-4b2c-8034-b3f37802a3da",
+      "name": "Loop Over Items6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入项\nconst items = $input.all();\n\n// 创建合并后的新 item\nconst mergedItem = {\n  json: {},\n  binary: {}\n};\n\n// 遍历所有 item，收集 binary 数据\nlet imageIndex = 1;\nfor (const item of items) {\n  if (item.binary) {\n    // 遍历该项的所有 binary 属性\n    for (const [key, value] of Object.entries(item.binary)) {\n      mergedItem.binary[`ckimage_${imageIndex}`] = value;\n      imageIndex++;\n    }\n  }\n}\n\n// 设置元数据\nmergedItem.json.totalImages = imageIndex - 1;\n\n// 输出合并后的单个 item\nreturn [mergedItem];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        32
+      ],
+      "id": "646a02c7-47aa-4fb9-907f-4d6685473d48",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        752,
+        224
+      ],
+      "id": "a15a6ce0-ec6d-4203-8b60-173fa2f980c8",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        304,
+        560
+      ],
+      "id": "3209dacc-abfd-46b7-ab5f-143dbab2b952",
+      "name": "Loop Over Items7"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.imageUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        528,
+        608
+      ],
+      "id": "93111a54-ea62-4f67-b1fc-b2d195606b2f",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入项\nconst items = $input.all();\n\n// 创建合并后的新 item\nconst mergedItem = {\n  json: {},\n  binary: {}\n};\n\n// 遍历所有 item，收集 binary 数据\nlet imageIndex = 1;\nfor (const item of items) {\n  if (item.binary) {\n    // 遍历该项的所有 binary 属性\n    for (const [key, value] of Object.entries(item.binary)) {\n      mergedItem.binary[`cpimage_${imageIndex}`] = value;\n      imageIndex++;\n    }\n  }\n}\n\n// 设置元数据\nmergedItem.json.totalImages = imageIndex - 1;\n\n// 输出合并后的单个 item\nreturn [mergedItem];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        416
+      ],
+      "id": "ef0b536d-b05d-43fb-956d-cebbeeb12407",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst mergedItem = {\n  json: {},\n  binary: {}\n};\n\nfor (const item of items) {\n  if (item.binary) {\n    for (const [key, value] of Object.entries(item.binary)) {\n      mergedItem.binary[key] = value;\n    }\n  }\n}\n\nmergedItem.json.totalItems = items.length;\nmergedItem.json.totalImages = Object.keys(mergedItem.binary).length;\n\nreturn [mergedItem];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        224
+      ],
+      "id": "61ab3ec7-00c2-4eaf-baa3-44b883047fc8",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.weetar.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": \"{{ $json.taskId }}\",\n  \"file_path\": \"{{ $json.imagePaths }}\",\n  \"nsfw\": 0,\n  \"mark\": \"aplus_image\",\n  \"generate_spend\": {{ $json.generate_spend }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        7168,
+        272
+      ],
+      "id": "520668ff-e3c5-4590-9184-a49b6c9d2661",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================ \n// 处理 webhook 数据 + 生成任务ID和预定义路径 \n// ================================================ \n\nconst fs = require('fs'); \nconst path = require('path'); \n\nconst items = $input.all(); \nconst firstItem = items[0] || {}; \nconst body = firstItem.json?.body || {}; \n\nconst basePath = '/home/node/.n8n/AI-WEB'; \n\nconst now = new Date(); \nconst yyyy = String(now.getFullYear()); \nconst mm = String(now.getMonth() + 1).padStart(2, '0'); \nconst dd = String(now.getDate()).padStart(2, '0'); \nconst imageBasePath = `${basePath}/${yyyy}/${mm}/${dd}`; \n\n// 使用task_时间戳_随机字符串格式 \nconst chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'; \nlet randomStr = ''; \nfor (let i = 0; i < 12; i++) { \n  randomStr += chars.charAt(Math.floor(Math.random() * chars.length)); \n} \n\n// 【新增】在这里记录工作流的启动时间戳（毫秒）\nconst workflowStartTime = Date.now();\n\nconst taskId = `task_${workflowStartTime}_${randomStr}`; \n\nconst folderPath = path.join(imageBasePath, taskId); \nif (!fs.existsSync(folderPath)) { \n  fs.mkdirSync(folderPath, { recursive: true }); \n  console.log('path节点创建文件夹:', folderPath); \n} \n\nconst n8nHost = 'http://localhost:5678'; \n\nconst processImagePaths = (paths) => { \n  if (!paths || !Array.isArray(paths)) return []; \n  return paths.map(p => { \n    const cleanPath = p.startsWith('/') ? p.substring(1) : p; \n    return `${basePath}/${cleanPath}`; \n  }); \n}; \n\nconst ckimageUrls = processImagePaths(body.ckimage); \nconst cpimageUrls = processImagePaths(body.cpimage); \nconst allImageUrls = [...ckimageUrls, ...cpimageUrls]; \n\nconsole.log('ckimage 完整路径:', ckimageUrls); \nconsole.log('cpimage 完整路径:', cpimageUrls); \nconsole.log('所有图片路径:', allImageUrls); \n\n$execution.customData.set('taskId', taskId); \n$execution.customData.set('basePath', basePath); \n$execution.customData.set('imageBasePath', imageBasePath); \n$execution.customData.set('n8nHost', n8nHost); \n\nconst imageCount = parseInt(body.number) || 1; \n\nconst imageKeys = []; \nfor (let i = 1; i <= imageCount; i++) { \n  imageKeys.push(`${i}图`); \n} \n\nconst imageUrls = imageKeys.map((key) => ({ \n  name: key, \n  pollUrl: `${n8nHost}/webhook/poll-image?taskId=${taskId}&imageKey=${key}`, \n  localPath: `${imageBasePath}/${taskId}/${key}.png` \n})); \n\nconsole.log('生成的任务ID:', taskId); \nconsole.log('预定义的图片URLs:', imageUrls); \n\nreturn [{ \n  json: { \n    ...firstItem.json, \n    originalBody: body, \n    ckimageUrls: ckimageUrls, \n    cpimageUrls: cpimageUrls, \n    allImageUrls: allImageUrls, \n    totalImages: allImageUrls.length, \n    basePath: basePath, \n    taskId: taskId, \n    imageBasePath: imageBasePath, \n    imageCount: imageCount, \n    imageUrls: imageUrls, \n    folderPath: folderPath, \n    year: yyyy, \n    month: mm, \n    day: dd, \n    \n    // 【核心新增】将启动时间戳输出到 JSON 中，供结尾节点抓取\n    workflowStartTime: workflowStartTime, \n    \n    _meta: { \n      generatedAt: new Date().toISOString(), \n      promptReady: true, \n      imageGenerating: true \n    } \n  }, \n  binary: firstItem.binary || {} \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        384
+      ],
+      "id": "a7a7c961-513a-4a4d-8196-adf2fc179ed5",
+      "name": "path"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// 字段完整性校验节点\n// 检查 body 中是否包含所有必填字段\n// 缺少字段时输出 error，由下游 IF 节点路由到 HTTP 反馈\n// 所有字段正常则原封不动传入下一节点\n// ================================================\n\nconst items = $input.all();\n\n// 定义必填字段列表\nconst requiredFields = [\n  'name',\n  'ProductInformation',\n  'ckimage',\n  'cpimage',\n  'language'\n  // number / color / aspect_ratio 已取消，前端不再传入\n];\n\n// 检查每个 item 的字段完整性\nconst results = items.map((item) => {\n  const data = item.json;\n\n  // 优先从 body 中取字段，取不到再从顶层取\n  const source = data.body || data;\n\n  // 找出缺失的字段\n  const missingFields = requiredFields.filter((field) => {\n    const value = source[field];\n    \n    // 如果值是数组，过滤掉空字符串后检查是否还有有效数据\n    if (Array.isArray(value)) {\n      const validItems = value.filter(v => v !== undefined && v !== null && v !== '');\n      return validItems.length === 0;\n    }\n    \n    return value === undefined || value === null || value === '';\n  });\n\n  if (missingFields.length > 0) {\n    return {\n      json: {\n        ...data,\n        success: false,\n        error: true,\n        errorMessage: `缺少必填字段: ${missingFields.join(', ')}`\n      }\n    };\n  }\n\n  // 所有字段正常，原封不动传递\n  return {\n    json: {\n      ...data,\n      success: true,\n      error: false\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        384
+      ],
+      "id": "2c1e5200-3b08-4ae5-a86e-b8089396d303",
+      "name": "字段校验"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "108623bc-b5d3-4b66-892d-235d95aa98eb",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -512,
+        384
+      ],
+      "id": "5fe46eeb-8b2b-4823-9c02-45776a60bc81",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.weetar.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"task_id\": \"{{ $json.taskId }}\", \n\"file_path\": [\"{{ $json.folderPath }}\"], \n\"nsfw\": 0, \n\"mark\": \"aplus_image\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -288,
+        480
+      ],
+      "id": "aeed7925-3e0c-4537-9b25-2634761b4ddc",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.weetar.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"task_id\": \"{{ $('path').item.json.taskId }}\", \n\"file_path\": [\"{{ $('path').item.json.folderPath }}\"], \n\"nsfw\": 0, \n\"mark\": \"aplus_image\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1648,
+        128
+      ],
+      "id": "bb200b52-76db-450b-a604-264d4a99fb9c",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "content": "图片压缩，转base64\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 896,
+        "width": 1712,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        -64
+      ],
+      "id": "3a7577d6-91ba-4b9c-8657-63c9c4ce31fe",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "接收数据进行校验，处理路径",
+        "height": 880,
+        "width": 1280,
+        "color": "#964545"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        -48
+      ],
+      "id": "11f2b7a7-c462-44ce-a0f0-979014c409b8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "大模型风格反推，提示词生成\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 896,
+        "width": 1984,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3552,
+        -64
+      ],
+      "id": "d649eab8-6393-46c6-ae1d-7e293cff22dc",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "nanobanana生图\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 896,
+        "width": 896,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5552,
+        -64
+      ],
+      "id": "8cead0a4-c1d4-4d77-bda5-def324ed0aac",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "图片储存\n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/components/sticky-notes/)",
+        "height": 896,
+        "width": 880
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6464,
+        -64
+      ],
+      "id": "420d5ace-1c11-4646-99a2-d504aaaeb729",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "提取图片，工后续处理",
+        "height": 896,
+        "width": 1760,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -64
+      ],
+      "id": "4d8093d1-16f3-49ac-8b0c-636615878f05",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "74e5e535-15db-469e-8b08-bbf852ae42b2",
+              "leftValue": "={{ Array.isArray($json.body?.ckimage) && $json.body.ckimage.filter(v => v !== undefined && v !== null && String(v).trim() !== '').length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1168,
+        384
+      ],
+      "id": "27fd3d65-1831-4eae-9ae2-7504c1ef13f4",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "1",
+        "width": 1464,
+        "height": 600,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        6256,
+        144
+      ],
+      "id": "dc7b00d0-5202-439f-b8e7-428e855e6337",
+      "name": "Edit Image1"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "2",
+        "width": 1464,
+        "height": 600,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        6256,
+        352
+      ],
+      "id": "57d4b4af-72d0-474a-9b16-90499e999bca",
+      "name": "Edit Image2"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "3",
+        "width": 1464,
+        "height": 600,
+        "resizeOption": "ignoreAspectRatio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        6256,
+        576
+      ],
+      "id": "f3c0e309-0446-4213-aaab-c0a0eac52b12",
+      "name": "Edit Image3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// 处理 webhook 数据 + 生成任务ID和预定义路径（无 ckimage 分支）\n// 【新增】记录工作流启动时间\n// ================================================\n\nconst items = $input.all();\nconst firstItem = items[0] || {};\nconst body = firstItem.json?.body || {};\n\nconst basePath = '/home/node/.n8n/AI-WEB';\n\nconst now = new Date();\nconst yyyy = String(now.getFullYear());\nconst mm = String(now.getMonth() + 1).padStart(2, '0');\nconst dd = String(now.getDate()).padStart(2, '0');\nconst imageBasePath = `${basePath}/${yyyy}/${mm}/${dd}`;\n\n// 使用 task_时间戳_随机字符串格式\nconst chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';\nlet randomStr = '';\nfor (let i = 0; i < 12; i++) {\n    randomStr += chars.charAt(Math.floor(Math.random() * chars.length));\n}\nconst taskId = `task_${Date.now()}_${randomStr}`;\n\nconst folderPath = `${imageBasePath}/${taskId}`;\n\nconst n8nHost = 'http://localhost:5678';\n\nconst processImagePaths = (paths) => {\n    if (!paths || !Array.isArray(paths)) return [];\n    return paths.map(p => {\n        const cleanPath = p.startsWith('/') ? p.substring(1) : p;\n        return `${basePath}/${cleanPath}`;\n    });\n};\n\n// 支线分支：不处理 ckimage，只处理 cpimage\nconst cpimageUrls = processImagePaths(body.cpimage);\n\nconsole.log('cpimage 完整路径:', cpimageUrls);\n\n$execution.customData.set('taskId', taskId);\n$execution.customData.set('basePath', basePath);\n$execution.customData.set('imageBasePath', imageBasePath);\n$execution.customData.set('n8nHost', n8nHost);\n\nreturn [{\n    json: {\n        ...firstItem.json,\n        originalBody: body,\n        cpimageUrls: cpimageUrls,\n        allImageUrls: cpimageUrls,\n        totalImages: cpimageUrls.length,\n        basePath: basePath,\n        taskId: taskId,\n        imageBasePath: imageBasePath,\n        folderPath: folderPath,\n        year: yyyy,\n        month: mm,\n        day: dd,\n        // 【核心】记录当前毫秒级时间戳，用于后续计算耗时\n        workflowStartTime: Date.now(),\n        _meta: {\n            generatedAt: new Date().toISOString(),\n            promptReady: true,\n            imageGenerating: true,\n            branch: 'no-ckimage'\n        }\n    },\n    binary: firstItem.binary || {}\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1008,
+        64
+      ],
+      "id": "bcead9fb-3bf1-42ca-88ec-efb0bede8973",
+      "name": "path1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// 字段完整性校验节点\n// 检查 body 中是否包含所有必填字段\n// 缺少字段时输出 error，由下游 IF 节点路由到 HTTP 反馈\n// 所有字段正常则原封不动传入下一节点\n// ================================================\n\nconst items = $input.all();\n\n// 定义必填字段列表\n// 说明：ckimage 不再是必填项。\n//   - 有 ckimage 的请求经 IF-cksplit 的 true 分支进来，path 节点已处理\n//   - 没有 ckimage 的请求经 false 分支走支线（path-支线），不需要 ckimage\n//   所以这个校验节点对两条分支都要放行\nconst requiredFields = [\n  'name',\n  'ProductInformation',\n  'cpimage',\n  'language'\n  // ckimage   ← 去掉，已交给 IF-cksplit 路由处理\n  // number    ← 去掉，由 path 节点按 ckimage 数量自动生成\n  // color / aspect_ratio ← 之前就移除了\n];\n\n// 检查每个 item 的字段完整性\nconst results = items.map((item) => {\n  const data = item.json;\n\n  // 优先从 body 中取字段，取不到再从顶层取\n  const source = data.body || data;\n\n  // 找出缺失的字段\n  const missingFields = requiredFields.filter((field) => {\n    const value = source[field];\n    \n    // 如果值是数组，过滤掉空字符串后检查是否还有有效数据\n    if (Array.isArray(value)) {\n      const validItems = value.filter(v => v !== undefined && v !== null && v !== '');\n      return validItems.length === 0;\n    }\n    \n    return value === undefined || value === null || value === '';\n  });\n\n  if (missingFields.length > 0) {\n    return {\n      json: {\n        ...data,\n        success: false,\n        error: true,\n        errorMessage: `缺少必填字段: ${missingFields.join(', ')}`\n      }\n    };\n  }\n\n  // 所有字段正常，原封不动传递\n  return {\n    json: {\n      ...data,\n      success: true,\n      error: false\n    }\n  };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        64
+      ],
+      "id": "1b508b60-812b-497e-b6ed-302a64d31294",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"code\": 200,\n  \"taskId\": \"{{ $json.taskId }}\",\n  \"message\": \"图片正在生成中\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -720,
+        64
+      ],
+      "id": "346fe234-6e37-4a1f-8238-e7731eb422b5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "96acb636-dce2-49a0-957d-b9af68f027b3",
+              "name": "body.name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "97a033ec-a038-4a33-9d1a-efe06f86e68a",
+              "name": "body.number",
+              "value": "={{ $json.body.number }}",
+              "type": "string"
+            },
+            {
+              "id": "fc29aa5e-4f4a-445a-bc04-39c7f1e076af",
+              "name": "body.ProductInformation",
+              "value": "={{ $json.body.ProductInformation }}",
+              "type": "string"
+            },
+            {
+              "id": "fb73826b-d347-4f71-ac9a-ec9e875e2c1c",
+              "name": "body[0].cpimageUrls",
+              "value": "={{ $json.cpimageUrls }}",
+              "type": "array"
+            },
+            {
+              "id": "1ed3e3df-b1e7-4566-862e-f121246cee6f",
+              "name": "body.language",
+              "value": "={{ $json.body.language }}",
+              "type": "string"
+            },
+            {
+              "id": "a7d7b78b-fc28-4bcb-b8ce-2aefa1da0323",
+              "name": "workflowStartTime",
+              "value": "={{ $('path1').item.json.workflowStartTime }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -544,
+        64
+      ],
+      "id": "70dc66c9-65f1-4569-9ccb-08789c3adb1a",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "I63kN4p65c5Jdhsy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/I63kN4p65c5Jdhsy",
+          "cachedResultName": "My Sub-workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "body": "={{ $json.body }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Respond_to_Webhook2_allItems",
+              "displayName": "Respond_to_Webhook2_allItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "path_allItems",
+              "displayName": "path_allItems",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        64
+      ],
+      "id": "b02452b1-bce0-48b7-98dd-9a14e89f470f",
+      "name": "Call 'My Sub-workflow'"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ai.weetar.com/api/aplus_image/task_result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"task_id\": \"{{ $json.taskId }}\",\n  \"file_path\": {{ $json.imagePaths }},\n  \"nsfw\": 0,\n  \"mark\": \"aplus_image\",\n  \"generate_spend\": {{ $json.generate_spend }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        64
+      ],
+      "id": "2230d717-43e5-4041-ade2-ad35fdaa43eb",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ==========================================\n// 【1】获取当前节点的输入数据\n// ==========================================\nconst items = $input.all();\nconst item = items[0] || {};\nconst json = item.json || {}; // 增加防空处理，防止 json 为 undefined\n\n// ==========================================\n// 【2】核心：从 path1 节点精准抓取启动时间 & taskId\n// ==========================================\nlet startTime = null;\nlet taskId = 'unknown_task'; // 默认值\n\ntry {\n    // 使用 n8n 官方跨节点语法获取 path1 节点的第一条数据\n    const path1Data = $('path1').first();\n    \n    // 【核心修改】从 path1 节点提取 taskId（增加防空与类型校验）\n    if (path1Data?.json?.taskId) {\n        taskId = path1Data.json.taskId;\n    } else {\n        console.warn('⚠️ 成功访问了 path1 节点，但未找到 taskId 字段');\n    }\n    \n    // 从 path1 节点提取启动时间\n    if (path1Data?.json?.workflowStartTime) {\n        startTime = path1Data.json.workflowStartTime;\n    } else {\n        console.warn('⚠️ 成功访问了 path1 节点，但未找到 workflowStartTime 字段');\n    }\n    \n} catch (e) {\n    console.error('❌ 无法访问 path1 节点，请检查节点名称是否准确为 \"path1\"。错误信息:', e.message);\n}\n\n// 兜底机制：如果抓取失败，使用当前时间防止报错\nif (!startTime) {\n    startTime = Date.now();\n    console.warn('⚠️ 未获取到有效的启动时间，耗时将显示为 0');\n}\n\n// ==========================================\n// 【3】清洗 imagePathsComma 字段（去除多余的转义符）\n// ==========================================\nlet cleanImagePathsComma = json.imagePathsComma;\nif (typeof cleanImagePathsComma === 'string') {\n    // 将 \\\" 替换为 \"\n    cleanImagePathsComma = cleanImagePathsComma.replace(/\\\\\"/g, '\"');\n}\n\n// ==========================================\n// 【4】计算运行耗时\n// ==========================================\nconst endTime = Date.now();\nconst durationMs = endTime - startTime;\n\n// 防止出现负数耗时（最小为 0）\nconst safeDurationMs = Math.max(0, durationMs);\n\n// 转换为秒，保留 2 位小数\nconst generateSpend = parseFloat((safeDurationMs / 1000).toFixed(2));\n\n// ==========================================\n// 【5】构建并返回输出数据\n// ==========================================\nreturn [{\n    json: {\n        // 将上游的所有原始数据原封不动地继承下来\n        ...json, \n        \n        // 覆盖/更新清洗后的 imagePathsComma\n        imagePathsComma: cleanImagePathsComma,\n        \n        // 覆盖或新增当前节点处理后的字段（taskId 现在来自 path1 节点）\n        taskId: taskId,\n        generate_spend: generateSpend,\n        status: \"completed\",\n        finished_at: new Date(endTime).toISOString(),\n        \n        // 调试字段（确认无误后可删除）\n        _debug_start_time: startTime,   \n        _debug_duration_ms: safeDurationMs \n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        64
+      ],
+      "id": "286566c0-7345-46cf-9f44-f4869434b8c9",
+      "name": "Code in JavaScript9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        6064,
+        -224
+      ],
+      "id": "67efa659-966d-431f-b28e-d5b6406a777e",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "mode": "image",
+        "userPrompt": "11"
+      },
+      "type": "n8n-nodes-maibaoapi.maibaoApi",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        944
+      ],
+      "id": "d833611d-dfef-4183-8563-cada222c991c",
+      "name": "MaibaoAPI"
+    }
+  ],
+  "connections": {
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "提取cpimage或者ckimage",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nano Banana3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nano Banana2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nano Banana1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "计数1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取构图参考": {
+      "main": [
+        [
+          {
+            "node": "binary转换base",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取cpimage或者ckimage": {
+      "main": [
+        [
+          {
+            "node": "binary转换base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "binary转换base64": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "提示词分段提取图片1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "binary转换base": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "binary转换base64-",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "binary转换base64-": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提示词分段提取图片1": {
+      "main": [
+        [
+          {
+            "node": "提示词图片排列组合",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提示词图片排列组合": {
+      "main": [
+        [
+          {
+            "node": "计数1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "提取构图参考",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana1": {
+      "main": [
+        [
+          {
+            "node": "Edit Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana2": {
+      "main": [
+        [
+          {
+            "node": "Edit Image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana3": {
+      "main": [
+        [
+          {
+            "node": "Edit Image3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "ckimage",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "cpimage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ckimage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cpimage": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items7": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "path": {
+      "main": [
+        [
+          {
+            "node": "字段校验",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "字段校验": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "path",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "path1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "path1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Call 'My Sub-workflow'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'My Sub-workflow'": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "1e28a98d-bac5-4014-9e0b-81d93e7f487f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-06-12T00:40:36.220Z",
+      "createdAt": "2026-06-12T00:40:36.220Z",
+      "role": "workflow:owner",
+      "workflowId": "Q0hePD6uG3zAfGo9",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
