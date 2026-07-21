@@ -1,0 +1,241 @@
+{
+  "updatedAt": "2026-01-29T07:45:43.748Z",
+  "createdAt": "2026-01-29T07:44:12.939Z",
+  "id": "jXyyW4soH3SEfwPf",
+  "name": "详情页--ok---可以测试用 copy",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hello! I am your e-commerce visual consultant. Please upload product images and tell me your selling points (e.g., sofas, sold to the US, French chic style).",
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -336,
+        2800
+      ],
+      "id": "75bb42d9-7215-446c-994b-78514d3a4f79",
+      "name": "When chat message received",
+      "webhookId": "37b202d3-6685-483e-b6c8-8cf9a9b06266"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst imageParts = [];\nlet textContent = '';\n\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  // 仅在第一个 item 中提取文字描述\n  if (i === 0) textContent = $input.first().json.body.prompt;\n  \n  const bin = item.binary || {};\n  const binaryKeys = Object.keys(bin);\n\n  for (const key of binaryKeys) {\n    const b = bin[key];\n    if (b) {\n      const buffer = await this.helpers.getBinaryDataBuffer(i, key);\n      const base64 = buffer.toString('base64');\n      const mime = b.mimeType || 'image/jpeg';\n      \n      // 按照 Gemini 的 inline_data 格式打包\n      imageParts.push({\n        inline_data: {\n          mime_type: mime,\n          data: base64\n        }\n      });\n    }\n  }\n}\n\n// 最终只输出一个 item，包含所有图片和文字\nreturn [{\n  json: {\n    text_11: textContent,\n    gemini_images: imageParts // 这里包含了 1~N 张图\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        2800
+      ],
+      "id": "df9ec23b-387d-434a-867a-5522921b18d5",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"prompt\": \"{{ $json.prompt }}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1072,
+        2800
+      ],
+      "id": "d16c3906-1690-4fa6-8240-0f7f99277887",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"[Role] 你是一位资深的亚马逊（Amazon）Listing/A+ 详情页设计大师及 AI 提示词工程师。你需要将产品信息转化为符合平台规则、高转化率、适合移动端阅读的多屏图片提示词，并确保跨屏视觉风格的高度一致性。\\n[Task] 根据用户提供的产品信息和“输出语言要求”，一次性生成指定数量（prompt_count）的图片提示词（List[str]）。每个列表元素对应一屏内容。\\n[Output Format] 仅输出 JSON 字符串列表 (List[str])。不要输出任何多余的文字、解释、Markdown 或代码块。列表长度必须严格等于 prompt_count。每个元素必须仅包含提示词正文（纯文本字符串）。不要输出任何 JSON 对象包装器或字段名（如 {}，prompt: 等）。\\n[REQUIRED Headings] 提示词正文内必须且仅允许包含以下 5 个模块标题：主文案: 副文案: 布局与排版: 视觉与构图: 质量与细节:\\n[Language Rules] 始终遵循“输出中文”的要求。除了无法避免的行业标准缩写、单位或型号（如 USB-C, IPX7, mAh, cm, mm）外，所有描述文字必须使用中文，严禁中英文混杂。\\n[Amazon 合规与控风险规则 — 必须遵守] 严禁使用绝对化或无法证实的表述：不要使用“第一”、“最”、“100%”、“永久”、“零风险”、“治愈”等。使用更温和、可辩护的词汇，如“旨在”、“有助于”、“针对...优化”、“更稳定”、“更易于”、“改进的”。严禁直接命名或抨击竞争对手：在对比图中，使用“传统方案”/“典型产品”代替品牌名。除非用户明确提供，否则不要伪造认证标志（CE, RoHS 等）。针对 KPI 和图表：必须使用“示意图/占位符/示例图表”字样，并添加免责声明，如“结果可能因人而异；基于内部测试”。不要捏造具体的性能百分比。避免医疗/治疗性声明，除非用户提供了合规证明。\\n[Reference Image Consistency] 如果用户上传了产品参考图：将所有参考图视为同一产品的不同角度。确保产品外观（比例、颜色、饰面、材质、Logo 位置、按键布局、纹理细节）在所有屏中完全一致。严禁捏造参考图中不存在的零件或配件。参考图仅约束主体外观；不要复制参考图的背景/道具/灯光。倾向于“将产品抠图/隔离”并在新场景中重建。每屏提示词必须包含“参考行”：\\\"参考：以上传的产品图为严格视觉参考；保持跨屏外观一致。\\\" 如果有多张图，必须指定优先级，如：\\\"首选参考：图 X（角度/细节）\\\"。如果背景杂乱，必须明确要求：\\\"隔离产品，移除人手/杂物，重建干净的摄影棚场景。\\\"\\n[Cross-Screen Consistency (无参考图时)] 根据产品信息锁定统一的视觉系统：主/次色调（最多 2 种）、材质感、一致的灯光方向、阴影风格、图标风格（线条 vs 实心）、排版氛围。保持 UI 组件一致：相同的圆角、线宽、标签样式、图标粗细和间距。\\n[Screen Narrative Order] 逻辑顺序：首屏（结果/痛点反转 + 3–6 个卖点图标）；痛点分析（3–5 项）；一键方案（解决什么 + 如何解决）；核心机制（3 步原理 / 爆炸图）；特征矩阵（6–10 个卡片）；参数规格（大数字 KPI / 图表）；配件/兼容性；使用教程（3–5 步）；场景展示（4–8 个场景）；对比图（本品 vs 传统方案）；信任背书（认证、案例、评论）；异议处理（FAQ + 风险消除）；收尾 CTA + 质保/售后承诺。如果数量不足 13：按顺序合并相邻模块。第一屏必须是首屏；最后一屏必须是 CTA。\\n[Per-Screen Output Structure] 每个数组元素必须包含：屏幕定位: (例如 “屏幕定位: 首屏概览”)。随后是 5 个必须的模块：主文案: \\\"...\\\" 副文案: \\\"...\\\" 布局与排版: ... 视觉与构图: ... 质量与细节: ... \\n在每屏字符串的末尾必须附加抗翻译语句：\\\"保持所有文字仅使用英文输出。不要翻译成中文。不要混入任何中文字符（除标准单位外）。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $json.text_11 }}\"\n        },\n        {{ JSON.stringify($json.gemini_images).slice(1, -1) }}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        384,
+        2800
+      ],
+      "id": "ba0f4754-fa13-4009-9e99-b61a32d8a769",
+      "name": "HTTP gemini-2."
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst collectPrompts = () => {\n  const out = [];\n  for (const it of items) {\n    // 1. 定位 Gemini 返回的核心文本\n    const text = it.json?.candidates?.[0]?.content?.parts?.[0]?.text;\n    let s = toStr(text);\n\n    if (s) {\n      // 2. 移除开头的 Markdown JSON 标记和方括号\n      s = s.replace(/^```json\\s*\\[?\\n?/, '') \n           .replace(/\\n?\\]?\\s*```$/, '')      \n           .trim();\n\n      // 3. 彻底清除换行符和各种斜杠\n      s = s.replace(/\\\\n/g, ' ')   // 清理转义换行\n           .replace(/\\n/g, ' ')     // 清理常规换行\n           .replace(/\\/n/g, ' ')    // 清理正斜杠换行\n           .replace(/\\\\/g, '')      // 移除所有反斜杠 \\\n           .replace(/\\//g, ' ');    // 移除所有正斜杠 / (替换为空格以防单词粘连)\n\n      // 4. 清理残留的引号标记（可选，如果 AI 输出带引号的话）\n      s = s.replace(/\\\"/g, '');\n\n      // 5. 压缩多余空格\n      s = s.replace(/\\s+/g, ' ').trim();\n\n      out.push(s);\n    }\n  }\n  return Array.from(new Set(out));\n};\n\nconst prompts = collectPrompts();\n\n// 最终输出\nreturn [{\n  json: {\n    prompt: prompts[0] || \"\" \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        2800
+      ],
+      "id": "5238bf13-e1b9-4ee9-b916-8630b642317a",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "details_page",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Credentials",
+                "value": "true"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET,POST,PUT,OPTIONS,DELETE"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Transfer-Encoding",
+                "value": "chunked"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        2592
+      ],
+      "id": "109d5bde-10b5-4a3f-b42d-dbed0472b803",
+      "name": "Webhook",
+      "webhookId": "a157e97d-0b18-484d-b082-945217f7eea5"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "798983ed-d9f8-49aa-ac59-a5246d155848",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-29T07:44:12.939Z",
+      "createdAt": "2026-01-29T07:44:12.939Z",
+      "role": "workflow:owner",
+      "workflowId": "jXyyW4soH3SEfwPf",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
