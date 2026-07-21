@@ -1,0 +1,2299 @@
+{
+  "updatedAt": "2026-04-08T07:30:33.907Z",
+  "createdAt": "2026-03-27T02:41:47.457Z",
+  "id": "DVCrmcSGw4MyWgz20hr6C",
+  "name": "电商aigent3-1(产品图)new--qwen3---",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen/Qwen3-VL-32B-Thinking",
+          "mode": "list",
+          "cachedResultName": "Qwen/Qwen3-VL-32B-Thinking"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1952,
+        688
+      ],
+      "id": "9b7a63f2-6f64-4964-9184-8f572058d0f9",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "4h3AA9UIed1lWM83",
+          "name": "硅基流动"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        336
+      ],
+      "id": "9886bbf0-a1ee-4ff9-9b04-6277457e0e7e",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -96,
+        656
+      ],
+      "id": "7efd835b-80e5-4edc-b623-7db8afc802c2",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        576
+      ],
+      "id": "b669ca03-2cbd-49dd-a8f7-2232563de228",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        576
+      ],
+      "id": "5b527f5a-06c0-458b-8086-6dc10a2aa234",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "={{ Object.keys($binary)[0] }}",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -2528,
+        576
+      ],
+      "id": "3a3da9f7-9b65-4f44-b52c-9d1c5f3fdd61",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_images",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        336
+      ],
+      "id": "bfb688f7-e3b5-4bf7-ab8a-43e0112262fd",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1568,
+        336
+      ],
+      "id": "e542892c-e1da-4c84-8bbf-963efba2a689",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f4fcc18-251f-4642-9bc7-3ada98180fc7",
+              "name": "product",
+              "value": "={{ $('Webhook').item.json.body['Product Information'] }}",
+              "type": "string"
+            },
+            {
+              "id": "706563f9-734e-413f-bc21-859c1c9fc7fc",
+              "name": "body.name",
+              "value": "={{ $('Webhook').item.json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "3ad5e7c3-5d67-4f34-8f95-6ec510262cae",
+              "name": "body.number",
+              "value": "={{ $('Webhook').item.json.body.number }}",
+              "type": "string"
+            },
+            {
+              "id": "4e22b5e7-e44f-4711-a5a9-e8a9a9dcf273",
+              "name": "body.color",
+              "value": "={{ $('Webhook').item.json.body.color }}",
+              "type": "string"
+            },
+            {
+              "id": "1f11993c-5136-4fc9-a3a4-f7d52878f328",
+              "name": "body.language",
+              "value": "={{ $('Webhook').item.json.body.language }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2304,
+        576
+      ],
+      "id": "0d07e528-b363-4dcf-ac8d-deb0d5c62f8e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "1图"
+            },
+            {
+              "binaryPropertyName": "2图"
+            },
+            {
+              "binaryPropertyName": "3图"
+            },
+            {
+              "binaryPropertyName": "4图"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        672
+      ],
+      "id": "83adc019-fa79-49e1-a31c-885e8a615509",
+      "name": "Edit an image",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "d986655c-9ee9-4a2e-af9a-57f54c87a90d",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7b90dbd6-9302-43bc-8900-2e58b467714f",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 2,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "2"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "74bc473a-31da-4413-b8dd-eca1151dde2a",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "3"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "635ba467-27dd-46ed-a778-8a45a44ea5d4",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 4,
+                    "operator": {
+                      "type": "number",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "4"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "461c245c-af57-4c0e-a8e4-6c8dac42e2c2",
+                    "leftValue": "={{ $json.imageCount }}",
+                    "rightValue": 5,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "5"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        512
+      ],
+      "id": "22279f4e-7ca7-43c4-a5f0-e95eccc844e2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2d4f615b-b8ec-4293-8aea-b48ce747c400",
+              "leftValue": "={{ Object.keys($binary)[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3184,
+        432
+      ],
+      "id": "189741a6-b74e-438a-9b08-866838950634",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2976,
+        336
+      ],
+      "id": "8b6dddb6-21d6-42d7-8a21-79bb6cb53b0c",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        928
+      ],
+      "id": "506bf4be-c192-44ce-8525-8a906dc9c54b",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "1图"
+            },
+            {
+              "binaryPropertyName": "2图"
+            },
+            {
+              "binaryPropertyName": "3图"
+            },
+            {
+              "binaryPropertyName": "4图"
+            },
+            {
+              "binaryPropertyName": "5图"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        944
+      ],
+      "id": "bde3d934-bb6a-4467-b330-3630637d6494",
+      "name": "Edit an image1",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -112,
+        416
+      ],
+      "id": "5406153e-592c-47d7-9e7d-9b86c0dd2f78",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "1图"
+            },
+            {
+              "binaryPropertyName": "2图"
+            },
+            {
+              "binaryPropertyName": "3图"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        432
+      ],
+      "id": "683a5649-0003-4a89-ae46-b81907a743fd",
+      "name": "Edit an image2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -112,
+        224
+      ],
+      "id": "91f3cac5-077e-45ef-aef6-07dd2695c5bc",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-pro-image-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "1图"
+            },
+            {
+              "binaryPropertyName": "2图"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        240
+      ],
+      "id": "1301f86d-1739-4a83-8bfd-f8654870dc93",
+      "name": "Edit an image3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -96,
+        16
+      ],
+      "id": "8812fbf7-8bbf-484f-aae1-cced22d73fcc",
+      "name": "Loop Over Items4"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.prompt }}",
+        "images": {
+          "values": [
+            {
+              "binaryPropertyName": "1图"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        32
+      ],
+      "id": "ae2a878d-280f-48db-a651-d9850e02b691",
+      "name": "Edit an image4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：将上游所有数据原样传递，并为每个item添加图片数量统计\n// 返回：所有输入项，每个项的JSON中都增加了imageCount字段\n// ================================================\n\n// 遍历输入的所有 items\nfor (const item of $input.all()) {\n  // 动态计算当前 item 的 binary 中包含多少张图片\n  // 如果 item.binary 不存在，则其键的数量为 0\n  const calculatedImageCount = item.binary ? Object.keys(item.binary).length : 0;\n\n  // 将计算出的图片数量更新到 item 的 json 部分\n  item.json.imageCount = calculatedImageCount;\n\n  // 可选：打印日志信息用于调试\n  console.log(`Item ${item.json.image_key || 'unknown'} has ${calculatedImageCount} image(s) in its binary data.`);\n}\n\n// 返回所有经过处理的输入项\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        560
+      ],
+      "id": "fbd43799-9739-4ee6-8703-b9eee4593d3c",
+      "name": "计数1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能1：获取当前节点的输入数据（$input.all()）\n// 功能2：动态提取当前输入 binary 中所有的图片\n// 功能3：主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑）\n// 返回：合并后的数据，包含输入 JSON + 所有图片 + Edit Fields 的图片\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 获取当前节点的输入数据（所有 items，通常是 1 个）\n    const inputItems = $input.all();\n    const firstInput = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputJson = firstInput.json || {};\n    const inputBinary = firstInput.binary || {};\n\n    // 2. 动态提取当前输入 binary 中所有的图片\n    const allImages = {};\n    let totalImageCount = 0;\n\n    Object.keys(inputBinary).forEach(key => {\n      // 不再限制特定前缀，直接提取所有 binary 图片\n      if (inputBinary[key]) {\n        allImages[key] = { ...inputBinary[key] };  // 深拷贝 binary 对象\n        totalImageCount++;\n      }\n    });\n\n    // 调试日志\n    console.log('当前输入 binary 总键数:', Object.keys(inputBinary).length);\n    console.log('提取到的图片数:', totalImageCount);\n    console.log('图片键名列表:', Object.keys(allImages));\n\n    // 3. 主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑：寻找 cpimage 开头）\n    let editFieldsImages = [];\n    let editFieldsBinary = {};\n    let editFieldsImageCount = 0;\n    let editFieldsConnected = false;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        editFieldsItems.forEach((item, idx) => {\n          const itemBinary = item.binary || {};\n\n          Object.keys(itemBinary).forEach(key => {\n            // 修正点：将 'ckimage' 改为 'cpimage'\n            if (key.startsWith('ckimage') && itemBinary[key]) {\n              const img = itemBinary[key];\n              editFieldsImages.push({\n                fieldName: key,\n                fileName: img.fileName || '',\n                mimeType: img.mimeType || '',\n                fileExtension: img.fileExtension || '',\n                fileSize: img.fileSize || '',\n                sourceItemIndex: idx\n              });\n\n              // 带前缀避免冲突\n              editFieldsBinary[`editFields_${key}_${idx}`] = itemBinary[key];\n              editFieldsImageCount++;\n            }\n          });\n        });\n\n        if (editFieldsImageCount > 0) {\n          editFieldsConnected = true;\n          console.log(`成功从 Edit Fields 节点提取 ${editFieldsImageCount} 张图片`);\n        }\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 失败:', editFieldsErr.message);\n    }\n\n    // 4. 合并所有 binary：当前节点的所有图片 + Edit Fields 的 cpimage 图片\n    const mergedBinary = {\n      ...allImages,              // 所有图片\n      ...editFieldsBinary       // editFields_cpimageX_...\n    };\n\n    // 5. 返回结果\n    return [{\n      json: {\n        // 输入的原始 JSON 数据\n        inputData: inputJson,\n\n        // 当前节点的所有图片元数据\n        allImages: allImages,\n        totalImageCount: totalImageCount,\n        imageKeys: Object.keys(allImages),\n\n        // Edit Fields 的图片元数据（修正后）\n        editFieldsImages: editFieldsImages,\n        editFieldsImageCount: editFieldsImageCount,\n        editFieldsConnected: editFieldsConnected,\n\n        // 总计\n        finalTotalImageCount: Object.keys(mergedBinary).length,\n        source: 'merged_all_images_and_editFields'\n      },\n\n      // 合并后的 binary 数据\n      binary: mergedBinary\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        560
+      ],
+      "id": "b9cf8d01-c878-40b2-a601-14a0a640f1b4",
+      "name": "提取构图参考"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.editFieldsData.product }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=角色\n你是一键生成Amazon A+详情图的专业工作流助手，专注为用户提供符合Amazon平台标准的商品详情图设计方案，通过结构化分析产品信息，输出精准适配的详情图工作流，覆盖核心信息提炼、套图规格、风格字体、配色逻辑及设计规范，助力用户高效完成Amazon A+详情页的视觉转化。\n核心技能\n技能1: 信息采集与分析\n• 需用户提供信息: 产品名称、品类（如美妆护肤/母婴/运动户外/复古文艺等）、产品语言版本、品牌定位、核心卖点（如成分/功能/参数）、目标人群画像、额外视觉参考（如有）；\n• 基础分析: 自动识别产品类目，判断核心风格方向（参考预设品类模板），初步锁定适配的字体、配色体系。\n技能2: 核心信息提炼\n• 输出内容: 明确以下信息用于生成详情图框架:\n◦ 产品类目（如美妆/母婴等）及风格关键词（如 \"精致柔美\" \"圆润无攻击性\" 等，按品类匹配）;\n◦ 核心卖点（按重要性排序，含关键参数/差异化优势）;\n◦ 目标人群（如 \"25-35岁女性\" \"宝妈群体\" 等）;\n◦ 视觉规范基础框架（含尺寸、布局逻辑、信息层级）。\n\n技能3: 规格规范\n基础尺寸要求（优先推荐 Premium A+ 宽幅模块，更符合当前平台主流）：\n主模块 / Hero Banner（全宽背景图或首屏大图）：1464×600px（宽×高，推荐用于 Premium A+ Background with Text / Full Image 模块，桌面端沉浸式展示）；\n标准模块图（功能展示、参数、对比等）：1200×600px 或 1200×675px（16:9 宽幅比例，适合大多数 Premium / Standard 模块，移动端友好）；\n细节 / 多图模块（四图、双图、轮播等）：800×600px（单图带文）或 650×350px（双图左右对比），小图细节可使用 300×225px（多图网格）；\n辅助图 / 场景图：600×600px 或 600×450px（支持灵活调整，移动端优先）。\n• 布局逻辑: 优先使用宽幅模块（1464×600px）作为视觉冲击首屏；\n模块之间采用上下堆叠为主、左右对比为辅的排列关系；\n确保信息流畅：重要卖点（ANC、续航、音质等）放在前2-3个模块，细节与场景放在后部.\n\n技能4: 风格与字体适配\n• 基础字体体系:\n◦ 通用首选: Inter（正文）、SF Pro（可选，优先适配Mac端视觉）、Montserrat（标题）;\n◦ 品类专项字体:\n▪ 美妆护肤（口红/精华）: 纤细清晰型→DM Sans/Poppins（低字重），标题点缀→Didot（少量）;\n▪ 母婴/儿童（玩具/辅食）: 圆润无衬线→Nunito/Quicksand，标题→Baloo 2/Poppins（低字重）;\n▪ 运动户外（露营/跑鞋）: 粗体无衬线→Bebas Neue/Oswald，标题→Inter Bold/Anton;\n▪ 复古/文艺（复古音箱/手作）: 简约复古→Source Serif 4/Libre Franklin，排版→Work Sans（做旧）。\n技能5: 配色与转化重点\n• 基础配色体系:\n◦ 基础色: 黑/白/深灰（通用背景/边框），品牌色（科技蓝/金属银/莫兰迪色系等，用户提供品牌色{{ $json.editFieldsData.body.color }}）;\n◦ 点缀色: 荧光绿/电光蓝（少量）、珠光金/玫瑰金（美妆）、浅粉/浅蓝（母婴）、橙红/荧光绿（运动户外）;\n• 品类转化重点:\n◦ 美妆: 强调效果/成分/安全感（避免强手写体）;\n◦ 母婴: 无攻击性/安全感（图文密度适中）;\n◦ 运动户外: 耐用性/场景感（强调参数/场景化）;\n◦ 复古: 情绪感/年代感（留白与节奏优先）。\n技能6: 设计红线规避\n• 禁止项: 使用过细字体（如<10px）、Comic Sans/Impact（禁用字体）、高饱和撞色（超过3种基础色+2种点缀色总占比）、字体种类>2种（单图/模块内）、信息密度过高（参数区块对齐但留足空白）。\n输出\n1. 【产品核心信息】\n◦ 产品类目: 美妆护肤\n◦ 核心风格: 柔美、精致（纤细清晰但不幼态）\n◦ 目标人群: 25-35岁女性（关注成分安全/色彩多样性）\n◦ 核心卖点: 天然成分（95%天然植萃）、3色可选（#01#02#03）\n\n2. 【Amazon A+套图规格清单】\n◦ 图1（1464×600px）：Hero Banner / Premium Background with Text\n推荐内容：产品全貌高光展示 + 主标题 + 关键卖点标签\n◦ 图2（1200×600px）：Premium Dual Images with Text 或功能特写模块\n◦ 图3（1200×600px）：标准模块图\n◦ 图4（1200×600px）：...\n（按{{ $('Webhook').first().json.body.number }}张依次输出）\n\n3. 【风格与字体方案】\n◦ 主字体: DM Sans（正文，16px）\n◦ 标题字体: Poppins（低字重，20px）\n◦ 强调字体: Didot（少量标题点缀，24px）\n4. 【配色方案】\n◦ 基础色: 黑/白/深灰\n◦ 品牌色: 裸色（主色） + 玫瑰金（点缀色，3%）\n5. Amazon A+ 详情图核心逻辑（根据**{{ $('Edit Fields').item.json.body.number }}**要求的海报数量）\n限制\n• 仅基于用户提供的产品信息（名称/类目/卖点等）及内部标准生成方案，无需调用外部搜索;\n• 严格遵循Amazon A+详情图视觉规范，输出内容可直接用于设计工具（如Canva/PS）执行;\n• 不生成图片，仅输出可落地的设计参数与逻辑框架。\n【设计红线自查】\n规避: Comic Sans/过细字体（10px以下）/全图高饱和撞色\n禁止客套，问候语，禁止特殊符号，禁止空格换行和。括号只能用“()”不能用其他的括号,禁止/n\\n\\n，输出纯文本一整段",
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1808,
+        320
+      ],
+      "id": "4bb88667-4160-47e1-adf8-57105d8ad487",
+      "name": "信息风格反推",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('信息风格反推').item.json.output }}{{ $json.inputData.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=### 角色定位\n专业电商精英设计师，精通视觉语言与用户心理，通过精准单图聚焦、场景化文案、卖点配标与“痛点分析”，打造“一眼动心、一看就懂、一键下单”的爆款详情页。核心新增能力：根据用户输入的{{ $('Edit Fields').item.json.body.name }}{{ $('Edit Fields').item.json.product }}动态适配字体与色彩质感体系，在无版权合规性的前提下优化「视觉字体」与「色彩字体」双维度体验组合；提升视觉冲击力，同时通过「字体·颜色·产品调性」三位一体设计，确保跨语言用户体验与品牌调性传承，核心任务是用文字生成({{ $('Edit Fields').item.json.body.number }}张独立图片的完整场景（含视觉元素、文案、生成提示），适配图片生成工具精准还原。\n\n#### 尺寸规范\n每张图片按亚马逊详情页尺寸生成，16:9\n\n### 核心技能（整合高质感字体+配色系统）\n\n#### 技能5: 视觉一致性与信任强化（新增字体+配色适配规则）\n目标：确保语言字体+配色适配，提升不同{{ $('Edit Fields').item.json.body.language }}用户的视觉体验与可读性，通过「字体质感+色彩心理学」强化产品调性。\n\n##### 字体·配色适配原则：\n- 基础适配：\n- “字体与产品定位绑定”：高端/奢侈品→「高级感字体」；低饱和和高级色；平价/快消→「现代字体」；高饱和度色；\n- 避免与语言文化关联（如避免文化禁忌色，如红色在中东文化中谨慎），优先用无歧义色；\n- “配色规则”：主视觉≤3种主色（1主色+2辅助色），辅助色与主色形成「深浅/冷暖对比」，正文与背景对比度≥4.5:1（WCAG合规）。\n\n#### 中文（含繁体）/高质色标包\n- 基础字体：默认（平价/日常产品主色）；\n- 阿里巴巴普惠体/站酷快乐体，基础色：#4A4A4A（深灰，低饱和），#FED700（金黄，醒目识别数）；\n- 标题≥18px时用#333333（深灰），数据项≥16px时用#E63946（活力橙，促销点）。\n\n- 高级字体（高端/国际品牌主色）：\n- Playfair Display/Montserrat Alternates（标题）：#1A1A1A（近黑，经典），搭配#7B68EE（烟紫，文艺）；\n- Lato/Merriweather（正文）：#555555（深灰，优雅），辅助色#F5DEB3（小麦复古，复古）；\n- 混排规则：英文数字用#FFD700（金，与中文标题呼应）。\n\n#### 小语种（阿/日/韩及其他）\n- 日文：\n- 游ゴシック/Noto Sans JP，和风色（#A9A3A9（灰）+ #FDF5E6（米黄），避免#FF0000；日本本社死亡色）；\n- 高端电子产品：标题#2F3E46（藏青）+ #00CED1（科技蓝），正文#606060（深灰）。\n\n- 阿拉伯语（RTL）：\n- 主色#B84513（赭石棕，中东文化财运色），辅助色#D2B48C（暖棕），字体与色标左对齐。\n\n### 输出\n- 字体·颜色映射表：明确「产品-产品类型-字体-色标」组合（如“高端母婴（中文标）→ 高端色标（繁体）→#4B0082（紫中带金）”）；\n- 具体字体：提供每种字体对应的HEX/RGB色值（例：阿里巴巴普惠体标题色#333333，色标3:500）；\n- 配色逻辑：说明颜色与产品定位的绑定关系（例：#F5A623（橙色）→ 平价食品/促销领域）。\n\n### 技能4: 3秒文案设计（配色强化版）\n目标：通过“字体+动态色标”实现“一眼聚焦核心信息”。\n\n##### 配色规则：\n- 高/中/低三档产品：\n- 高端：字体#E9338B（字体#2A2A2A + 辅助色 #94A388（浅灰蓝））；\n- 平价：标题#E63946（橙色）+ 辅助色 #FDD6A5（暖黄）；\n- 通用：#0A0A0A（纯黑）+ #FFFFFF（白）（适配所有产品）。\n\n##### 输出格式：\n第X张图片(16:9)：主视觉素材 + 文案+ 生成场景提示\n\n### 12张图片生成模板（含颜色）\n- 主视觉：高端美妆（中文+英文）\n（产品半透明质感特写+浅紫渐变背景）\n[文案]（奢宠焕肤 | 进口成分）（中文，站酷高端体 #4A4A4A 18px 600字重）+「Luxury Glow | Imported Formula」（英文，Playfair Display #7B68EE 18px 400字重）+\n生成场景要求：背景#F5F5F5（RGB 245,245,245），标题#4A4A4A（HEX #4A4A4A），图标辅助色#D1B26F（暖金）\n\n### 限制\n- 颜色需为「无版权色」（如天猫详情页通用色#F5F5F5，禁止使用品牌专属色（如“可口可乐红”）；\n- 小语种色标需规避文化禁忌（如阿拉伯语禁用#FF0000）；\n- 生成所有颜色需附带「WCAG对比度值」（如 #4A55A2（18px文字）对比度5.2:1）。\n\n### 核心原则\n所有颜色服务「质感+认知成本」，让不同语言用户通过“字体+色标”快速感知产品定位。\n禁止客套，问候语，禁止特殊符号，禁止空格换行和。括号只能用“()”不能用其他的括号,禁止/n\\n\\n，输出纯文本一整段.",
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1808,
+        560
+      ],
+      "id": "6c724839-7ba3-4270-851f-8014d1b71c7c",
+      "name": "提示词生成",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'ckimage' 和 'cpimage' 开头的 binary 图片\n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'ckimage' 和 'cpimage' 开头的图片\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：同时检查 'ckimage' 和 'cpimage' 前缀\n          if (key.startsWith('ckimage') || key.startsWith('ckimage')) {\n            // 重命名：保持原名或改成 ckimage_0, ckimage_1 等（这里保留原名，避免冲突）\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志\n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的图片数:', extractedImageCount);\n    console.log('提取到的图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果\n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据\n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据\n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息\n        source: 'extracted_ckimage_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的图片的 binary 数据\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        320
+      ],
+      "id": "6473ce2e-0bc1-424d-982f-b9b498d532f4",
+      "name": "提取cpimage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// =============================================================\n// n8n Code 节点：拆分文字 Item + 每个 Item 复制全额 Binary 图片\n// =============================================================\n\nconst IMAGE_SOURCE_NODE = \"Edit Fields\"; // 图片来源节点名\nconst items = $input.all();\nlet resultItems = []; \n\n// 1. 获取并处理所有的 cpimage 图片，准备好“全额图片包”\nlet fullBinaryBundle = {};\ntry {\n  const sourceItems = $(IMAGE_SOURCE_NODE).all();\n  if (sourceItems.length > 0) {\n    // 合并所有源数据的二进制（防止数据分散在不同 item）\n    let combinedBinary = {};\n    sourceItems.forEach(si => {\n      if (si.binary) Object.assign(combinedBinary, si.binary);\n    });\n\n    // 筛选出 cpimage 开头的图片\n    const cpimageKeys = Object.keys(combinedBinary)\n      .filter(k => k.toLowerCase().startsWith('cpimage'))\n      // 排序确保 1, 2, 3... 的逻辑顺序\n      .sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));\n\n    // 【重命名部分】将它们重命名为 1图, 2图... 并存入大礼包\n    cpimageKeys.forEach((oldKey, index) => {\n      const newKey = `${index + 1}图`;\n      fullBinaryBundle[newKey] = combinedBinary[oldKey];\n    });\n  }\n} catch (e) {\n  console.error(`无法获取节点 ${IMAGE_SOURCE_NODE} 的数据: ${e.message}`);\n}\n\n// 2. 遍历输入，按文字描述拆分 Items\nfor (let item of items) {\n  const rawText = item.json.output || item.json.prompt || \"\";\n  if (!rawText) continue;\n\n  const cleanText = rawText\n    .replace(/<\\|?begin_of_box\\|?>/gi, '')\n    .replace(/<\\|?end_of_box\\|?>/gi, '')\n    .trim();\n\n  const imagePattern = /第(\\d+)[张幅]图片\\s*([\\s\\S]*?)(?=第\\d+[张幅]图片|$)/g;\n  let match;\n\n  while ((match = imagePattern.exec(cleanText)) !== null) {\n    const num = match[1]; \n    const content = match[2].trim();\n    \n    // 3. 为每一段文字创建一个新 Item\n    let newItem = {\n      json: {\n        prompt: content,      // 当前段落的描述\n        image_index: num,     // 标记这是第几段描述\n      },\n      // 4. 【核心需求】把刚才准备好的所有图片全部复制进来\n      // 这里使用的是深拷贝，确保每个 Item 都有独立的 1图, 2图...\n      binary: { ...fullBinaryBundle } \n    };\n\n    resultItems.push(newItem);\n  }\n}\n\n// 5. 返回拆分后的结果\nreturn resultItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1360,
+        560
+      ],
+      "id": "c61c565d-cfa3-4b06-90c9-b134b1ec62a2",
+      "name": "提示词分段提取图片1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "052478f0-dd92-4dad-9867-87e17647a00d",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3600,
+        432
+      ],
+      "id": "0d5f11be-a0c4-459b-8057-b475eb48bbc4",
+      "name": "Webhook",
+      "webhookId": "052478f0-dd92-4dad-9867-87e17647a00d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 同时提取 ckimage 和 cpimage 开头的 binary\n// 只有两个前缀都存在图片时，才提取；否则不提取（binary 返回空）\n\nconst binary = $input.item.binary || {};\n\nconst hasCkimage = Object.keys(binary).some(key => key.startsWith('ckimage'));\nconst hasCpimage = Object.keys(binary).some(key => key.startsWith('cpimage'));\n\n// 只有两个前缀都存在，才进行提取\nif (!hasCkimage || !hasCpimage) {\n  console.log('缺少 ckimage 或 cpimage 前缀的图片，不进行提取');\n  return [{\n    json: {\n      message: \"缺少 ckimage 或 cpimage 前缀的图片，不提取 binary\",\n      hasCkimage: hasCkimage,\n      hasCpimage: hasCpimage,\n      extracted: false\n    },\n    binary: {}   // 不返回任何 binary\n  }];\n}\n\n// 两个前缀都存在，开始提取并重命名\nconst extractedBinary = {};\n\nlet index = 1;\n\n// 提取 ckimage 开头的\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('ckimage')) {\n    extractedBinary[`ckimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\n// 提取 cpimage 开头的（继续编号）\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('cpimage')) {\n    extractedBinary[`cpimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\nconsole.log(`成功提取 ckimage 和 cpimage 图片，共 ${index - 1} 张`);\n\nreturn [{\n  json: {\n    message: \"成功提取 ckimage 和 cpimage 的图片\",\n    ckimageCount: Object.keys(binary).filter(k => k.startsWith('ckimage')).length,\n    cpimageCount: Object.keys(binary).filter(k => k.startsWith('cpimage')).length,\n    extracted: true\n  },\n  binary: extractedBinary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3376,
+        432
+      ],
+      "id": "59257d78-5e35-4e4e-a5a3-69739d5feb55",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "信息风格反推",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "提示词生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "提取cpimage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit an image4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit an image4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "计数1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取构图参考": {
+      "main": [
+        [
+          {
+            "node": "提示词生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "信息风格反推": {
+      "main": [
+        [
+          {
+            "node": "提取构图参考",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提示词生成": {
+      "main": [
+        [
+          {
+            "node": "提示词分段提取图片1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取cpimage": {
+      "main": [
+        [
+          {
+            "node": "信息风格反推",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提示词分段提取图片1": {
+      "main": [
+        [
+          {
+            "node": "计数1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "9de3c6ef-b91a-4f6b-9111-06cdd20ca72e",
+  "activeVersionId": "89cb3410-e158-4439-ae05-2dad17a2cfd9",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-27T02:41:47.457Z",
+      "createdAt": "2026-03-27T02:41:47.457Z",
+      "role": "workflow:owner",
+      "workflowId": "DVCrmcSGw4MyWgz20hr6C",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-03-27T09:19:52.765Z",
+    "createdAt": "2026-03-27T09:18:26.856Z",
+    "versionId": "89cb3410-e158-4439-ae05-2dad17a2cfd9",
+    "workflowId": "DVCrmcSGw4MyWgz20hr6C",
+    "nodes": [
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "Qwen/Qwen3-VL-32B-Instruct",
+            "mode": "list",
+            "cachedResultName": "Qwen/Qwen3-VL-32B-Instruct"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          -1920,
+          672
+        ],
+        "id": "9b7a63f2-6f64-4964-9184-8f572058d0f9",
+        "name": "OpenAI Chat Model4",
+        "credentials": {
+          "openAiApi": {
+            "id": "4h3AA9UIed1lWM83",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1360,
+          336
+        ],
+        "id": "9886bbf0-a1ee-4ff9-9b04-6277457e0e7e",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "options": {
+            "reset": false
+          }
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -96,
+          656
+        ],
+        "id": "7efd835b-80e5-4edc-b623-7db8afc802c2",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "operation": "resize",
+          "dataPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.editImage",
+        "typeVersion": 1,
+        "position": [
+          -2720,
+          576
+        ],
+        "id": "b669ca03-2cbd-49dd-a8f7-2232563de228",
+        "name": "Edit Image"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "$binary",
+          "options": {
+            "includeBinary": true
+          }
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          -2960,
+          576
+        ],
+        "id": "5b527f5a-06c0-458b-8086-6dc10a2aa234",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "={{ Object.keys($binary)[0] }}",
+          "options": {
+            "includeBinaries": true
+          }
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          -2528,
+          576
+        ],
+        "id": "3a3da9f7-9b65-4f44-b52c-9d1c5f3fdd61",
+        "name": "Aggregate"
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "destinationFieldName": "all_images",
+          "options": {
+            "includeBinaries": true
+          }
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          1152,
+          336
+        ],
+        "id": "bfb688f7-e3b5-4bf7-ab8a-43e0112262fd",
+        "name": "Aggregate1"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1568,
+          336
+        ],
+        "id": "e542892c-e1da-4c84-8bbf-963efba2a689",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5f4fcc18-251f-4642-9bc7-3ada98180fc7",
+                "name": "product",
+                "value": "={{ $('Webhook').item.json.body['Product Information'] }}",
+                "type": "string"
+              },
+              {
+                "id": "706563f9-734e-413f-bc21-859c1c9fc7fc",
+                "name": "body.name",
+                "value": "={{ $('Webhook').item.json.body.name }}",
+                "type": "string"
+              },
+              {
+                "id": "3ad5e7c3-5d67-4f34-8f95-6ec510262cae",
+                "name": "body.number",
+                "value": "={{ $('Webhook').item.json.body.number }}",
+                "type": "string"
+              },
+              {
+                "id": "4e22b5e7-e44f-4711-a5a9-e8a9a9dcf273",
+                "name": "body.color",
+                "value": "={{ $('Webhook').item.json.body.color }}",
+                "type": "string"
+              },
+              {
+                "id": "1f11993c-5136-4fc9-a3a4-f7d52878f328",
+                "name": "body.language",
+                "value": "={{ $('Webhook').item.json.body.language }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -2304,
+          576
+        ],
+        "id": "0d07e528-b363-4dcf-ac8d-deb0d5c62f8e",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3-pro-image-preview",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+          },
+          "prompt": "={{ $json.prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "1图"
+              },
+              {
+                "binaryPropertyName": "2图"
+              },
+              {
+                "binaryPropertyName": "3图"
+              },
+              {
+                "binaryPropertyName": "4图"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          672
+        ],
+        "id": "83adc019-fa79-49e1-a31c-885e8a615509",
+        "name": "Edit an image",
+        "executeOnce": false,
+        "retryOnFail": true,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "iLkme2aGuEdmYJU6",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "d986655c-9ee9-4a2e-af9a-57f54c87a90d",
+                      "leftValue": "={{ $json.imageCount }}",
+                      "rightValue": 1,
+                      "operator": {
+                        "type": "number",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "1"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "7b90dbd6-9302-43bc-8900-2e58b467714f",
+                      "leftValue": "={{ $json.imageCount }}",
+                      "rightValue": 2,
+                      "operator": {
+                        "type": "number",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "2"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "74bc473a-31da-4413-b8dd-eca1151dde2a",
+                      "leftValue": "={{ $json.imageCount }}",
+                      "rightValue": 3,
+                      "operator": {
+                        "type": "number",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "3"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "635ba467-27dd-46ed-a778-8a45a44ea5d4",
+                      "leftValue": "={{ $json.imageCount }}",
+                      "rightValue": 4,
+                      "operator": {
+                        "type": "number",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "4"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "461c245c-af57-4c0e-a8e4-6c8dac42e2c2",
+                      "leftValue": "={{ $json.imageCount }}",
+                      "rightValue": 5,
+                      "operator": {
+                        "type": "number",
+                        "operation": "gte"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "5"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -896,
+          512
+        ],
+        "id": "22279f4e-7ca7-43c4-a5f0-e95eccc844e2",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "2d4f615b-b8ec-4293-8aea-b48ce747c400",
+                "leftValue": "={{ Object.keys($binary)[0] }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -3184,
+          432
+        ],
+        "id": "189741a6-b74e-438a-9b08-866838950634",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          -2976,
+          336
+        ],
+        "id": "8b6dddb6-21d6-42d7-8a21-79bb6cb53b0c",
+        "name": "Respond to Webhook1"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -80,
+          928
+        ],
+        "id": "506bf4be-c192-44ce-8525-8a906dc9c54b",
+        "name": "Loop Over Items1"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3-pro-image-preview",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+          },
+          "prompt": "={{ $json.prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "1图"
+              },
+              {
+                "binaryPropertyName": "2图"
+              },
+              {
+                "binaryPropertyName": "3图"
+              },
+              {
+                "binaryPropertyName": "4图"
+              },
+              {
+                "binaryPropertyName": "5图"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          944
+        ],
+        "id": "bde3d934-bb6a-4467-b330-3630637d6494",
+        "name": "Edit an image1",
+        "retryOnFail": true,
+        "credentials": {
+          "googlePalmApi": {
+            "id": "iLkme2aGuEdmYJU6",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -112,
+          416
+        ],
+        "id": "5406153e-592c-47d7-9e7d-9b86c0dd2f78",
+        "name": "Loop Over Items2"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3-pro-image-preview",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+          },
+          "prompt": "={{ $json.prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "1图"
+              },
+              {
+                "binaryPropertyName": "2图"
+              },
+              {
+                "binaryPropertyName": "3图"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          432
+        ],
+        "id": "683a5649-0003-4a89-ae46-b81907a743fd",
+        "name": "Edit an image2",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "iLkme2aGuEdmYJU6",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -112,
+          224
+        ],
+        "id": "91f3cac5-077e-45ef-aef6-07dd2695c5bc",
+        "name": "Loop Over Items3"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-3-pro-image-preview",
+            "mode": "list",
+            "cachedResultName": "models/gemini-3-pro-image-preview (Nano Banana Pro)"
+          },
+          "prompt": "={{ $json.prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "1图"
+              },
+              {
+                "binaryPropertyName": "2图"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          240
+        ],
+        "id": "1301f86d-1739-4a83-8bfd-f8654870dc93",
+        "name": "Edit an image3",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "iLkme2aGuEdmYJU6",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          -96,
+          16
+        ],
+        "id": "8812fbf7-8bbf-484f-aae1-cced22d73fcc",
+        "name": "Loop Over Items4"
+      },
+      {
+        "parameters": {
+          "resource": "image",
+          "operation": "edit",
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash-image",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+          },
+          "prompt": "={{ $json.prompt }}",
+          "images": {
+            "values": [
+              {
+                "binaryPropertyName": "1图"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          32
+        ],
+        "id": "ae2a878d-280f-48db-a651-d9850e02b691",
+        "name": "Edit an image4",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "iLkme2aGuEdmYJU6",
+            "name": "Google Gemini(PaLM) Api account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：将上游所有数据原样传递，并为每个item添加图片数量统计\n// 返回：所有输入项，每个项的JSON中都增加了imageCount字段\n// ================================================\n\n// 遍历输入的所有 items\nfor (const item of $input.all()) {\n  // 动态计算当前 item 的 binary 中包含多少张图片\n  // 如果 item.binary 不存在，则其键的数量为 0\n  const calculatedImageCount = item.binary ? Object.keys(item.binary).length : 0;\n\n  // 将计算出的图片数量更新到 item 的 json 部分\n  item.json.imageCount = calculatedImageCount;\n\n  // 可选：打印日志信息用于调试\n  console.log(`Item ${item.json.image_key || 'unknown'} has ${calculatedImageCount} image(s) in its binary data.`);\n}\n\n// 返回所有经过处理的输入项\nreturn $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1120,
+          560
+        ],
+        "id": "fbd43799-9739-4ee6-8703-b9eee4593d3c",
+        "name": "计数1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能1：获取当前节点的输入数据（$input.all()）\n// 功能2：动态提取当前输入 binary 中所有的图片\n// 功能3：主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑）\n// 返回：合并后的数据，包含输入 JSON + 所有图片 + Edit Fields 的图片\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 获取当前节点的输入数据（所有 items，通常是 1 个）\n    const inputItems = $input.all();\n    const firstInput = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputJson = firstInput.json || {};\n    const inputBinary = firstInput.binary || {};\n\n    // 2. 动态提取当前输入 binary 中所有的图片\n    const allImages = {};\n    let totalImageCount = 0;\n\n    Object.keys(inputBinary).forEach(key => {\n      // 不再限制特定前缀，直接提取所有 binary 图片\n      if (inputBinary[key]) {\n        allImages[key] = { ...inputBinary[key] };  // 深拷贝 binary 对象\n        totalImageCount++;\n      }\n    });\n\n    // 调试日志\n    console.log('当前输入 binary 总键数:', Object.keys(inputBinary).length);\n    console.log('提取到的图片数:', totalImageCount);\n    console.log('图片键名列表:', Object.keys(allImages));\n\n    // 3. 主动获取 Edit Fields 节点的 binary 图像数据（修正逻辑：寻找 cpimage 开头）\n    let editFieldsImages = [];\n    let editFieldsBinary = {};\n    let editFieldsImageCount = 0;\n    let editFieldsConnected = false;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        editFieldsItems.forEach((item, idx) => {\n          const itemBinary = item.binary || {};\n\n          Object.keys(itemBinary).forEach(key => {\n            // 修正点：将 'ckimage' 改为 'cpimage'\n            if (key.startsWith('ckimage') && itemBinary[key]) {\n              const img = itemBinary[key];\n              editFieldsImages.push({\n                fieldName: key,\n                fileName: img.fileName || '',\n                mimeType: img.mimeType || '',\n                fileExtension: img.fileExtension || '',\n                fileSize: img.fileSize || '',\n                sourceItemIndex: idx\n              });\n\n              // 带前缀避免冲突\n              editFieldsBinary[`editFields_${key}_${idx}`] = itemBinary[key];\n              editFieldsImageCount++;\n            }\n          });\n        });\n\n        if (editFieldsImageCount > 0) {\n          editFieldsConnected = true;\n          console.log(`成功从 Edit Fields 节点提取 ${editFieldsImageCount} 张图片`);\n        }\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 失败:', editFieldsErr.message);\n    }\n\n    // 4. 合并所有 binary：当前节点的所有图片 + Edit Fields 的 cpimage 图片\n    const mergedBinary = {\n      ...allImages,              // 所有图片\n      ...editFieldsBinary       // editFields_cpimageX_...\n    };\n\n    // 5. 返回结果\n    return [{\n      json: {\n        // 输入的原始 JSON 数据\n        inputData: inputJson,\n\n        // 当前节点的所有图片元数据\n        allImages: allImages,\n        totalImageCount: totalImageCount,\n        imageKeys: Object.keys(allImages),\n\n        // Edit Fields 的图片元数据（修正后）\n        editFieldsImages: editFieldsImages,\n        editFieldsImageCount: editFieldsImageCount,\n        editFieldsConnected: editFieldsConnected,\n\n        // 总计\n        finalTotalImageCount: Object.keys(mergedBinary).length,\n        source: 'merged_all_images_and_editFields'\n      },\n\n      // 合并后的 binary 数据\n      binary: mergedBinary\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2064,
+          560
+        ],
+        "id": "b9cf8d01-c878-40b2-a601-14a0a640f1b4",
+        "name": "提取构图参考"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.editFieldsData.product }}",
+          "hasOutputParser": true,
+          "options": {
+            "systemMessage": "=角色\n你是一键生成Amazon A+详情图的专业工作流助手，专注为用户提供符合Amazon平台标准的商品详情图设计方案，通过结构化分析产品信息，输出精准适配的详情图工作流，覆盖核心信息提炼、套图规格、风格字体、配色逻辑及设计规范，助力用户高效完成Amazon A+详情页的视觉转化。\n核心技能\n技能1: 信息采集与分析\n• 需用户提供信息: 产品名称、品类（如美妆护肤/母婴/运动户外/复古文艺等）、产品语言版本、品牌定位、核心卖点（如成分/功能/参数）、目标人群画像、额外视觉参考（如有）；\n• 基础分析: 自动识别产品类目，判断核心风格方向（参考预设品类模板），初步锁定适配的字体、配色体系。\n技能2: 核心信息提炼\n• 输出内容: 明确以下信息用于生成详情图框架:\n◦ 产品类目（如美妆/母婴等）及风格关键词（如 \"精致柔美\" \"圆润无攻击性\" 等，按品类匹配）;\n◦ 核心卖点（按重要性排序，含关键参数/差异化优势）;\n◦ 目标人群（如 \"25-35岁女性\" \"宝妈群体\" 等）;\n◦ 视觉规范基础框架（含尺寸、布局逻辑、信息层级）。\n\n技能3: 规格规范\n基础尺寸要求（优先推荐 Premium A+ 宽幅模块，更符合当前平台主流）：\n主模块 / Hero Banner（全宽背景图或首屏大图）：1464×600px（宽×高，推荐用于 Premium A+ Background with Text / Full Image 模块，桌面端沉浸式展示）；\n标准模块图（功能展示、参数、对比等）：1200×600px 或 1200×675px（16:9 宽幅比例，适合大多数 Premium / Standard 模块，移动端友好）；\n细节 / 多图模块（四图、双图、轮播等）：800×600px（单图带文）或 650×350px（双图左右对比），小图细节可使用 300×225px（多图网格）；\n辅助图 / 场景图：600×600px 或 600×450px（支持灵活调整，移动端优先）。\n• 布局逻辑: 优先使用宽幅模块（1464×600px）作为视觉冲击首屏；\n模块之间采用上下堆叠为主、左右对比为辅的排列关系；\n确保信息流畅：重要卖点（ANC、续航、音质等）放在前2-3个模块，细节与场景放在后部.\n\n技能4: 风格与字体适配\n• 基础字体体系:\n◦ 通用首选: Inter（正文）、SF Pro（可选，优先适配Mac端视觉）、Montserrat（标题）;\n◦ 品类专项字体:\n▪ 美妆护肤（口红/精华）: 纤细清晰型→DM Sans/Poppins（低字重），标题点缀→Didot（少量）;\n▪ 母婴/儿童（玩具/辅食）: 圆润无衬线→Nunito/Quicksand，标题→Baloo 2/Poppins（低字重）;\n▪ 运动户外（露营/跑鞋）: 粗体无衬线→Bebas Neue/Oswald，标题→Inter Bold/Anton;\n▪ 复古/文艺（复古音箱/手作）: 简约复古→Source Serif 4/Libre Franklin，排版→Work Sans（做旧）。\n技能5: 配色与转化重点\n• 基础配色体系:\n◦ 基础色: 黑/白/深灰（通用背景/边框），品牌色（科技蓝/金属银/莫兰迪色系等，用户提供品牌色{{ $json.editFieldsData.body.color }}）;\n◦ 点缀色: 荧光绿/电光蓝（少量）、珠光金/玫瑰金（美妆）、浅粉/浅蓝（母婴）、橙红/荧光绿（运动户外）;\n• 品类转化重点:\n◦ 美妆: 强调效果/成分/安全感（避免强手写体）;\n◦ 母婴: 无攻击性/安全感（图文密度适中）;\n◦ 运动户外: 耐用性/场景感（强调参数/场景化）;\n◦ 复古: 情绪感/年代感（留白与节奏优先）。\n技能6: 设计红线规避\n• 禁止项: 使用过细字体（如<10px）、Comic Sans/Impact（禁用字体）、高饱和撞色（超过3种基础色+2种点缀色总占比）、字体种类>2种（单图/模块内）、信息密度过高（参数区块对齐但留足空白）。\n输出\n1. 【产品核心信息】\n◦ 产品类目: 美妆护肤\n◦ 核心风格: 柔美、精致（纤细清晰但不幼态）\n◦ 目标人群: 25-35岁女性（关注成分安全/色彩多样性）\n◦ 核心卖点: 天然成分（95%天然植萃）、3色可选（#01#02#03）\n\n2. 【Amazon A+套图规格清单】\n◦ 图1（1464×600px）：Hero Banner / Premium Background with Text\n推荐内容：产品全貌高光展示 + 主标题 + 关键卖点标签\n◦ 图2（1200×600px）：Premium Dual Images with Text 或功能特写模块\n◦ 图3（1200×600px）：标准模块图\n◦ 图4（1200×600px）：...\n（按{{ $('Webhook').first().json.body.number }}张依次输出）\n\n3. 【风格与字体方案】\n◦ 主字体: DM Sans（正文，16px）\n◦ 标题字体: Poppins（低字重，20px）\n◦ 强调字体: Didot（少量标题点缀，24px）\n4. 【配色方案】\n◦ 基础色: 黑/白/深灰\n◦ 品牌色: 裸色（主色） + 玫瑰金（点缀色，3%）\n5. Amazon A+ 详情图核心逻辑（根据**{{ $('Edit Fields').item.json.body.number }}**要求的海报数量）\n限制\n• 仅基于用户提供的产品信息（名称/类目/卖点等）及内部标准生成方案，无需调用外部搜索;\n• 严格遵循Amazon A+详情图视觉规范，输出内容可直接用于设计工具（如Canva/PS）执行;\n• 不生成图片，仅输出可落地的设计参数与逻辑框架。\n【设计红线自查】\n规避: Comic Sans/过细字体（10px以下）/全图高饱和撞色\n禁止客套，问候语，禁止特殊符号，禁止空格换行和。括号只能用“()”不能用其他的括号,禁止/n\\n\\n，输出纯文本一整段",
+            "returnIntermediateSteps": false,
+            "passthroughBinaryImages": true,
+            "batching": {}
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          -1808,
+          320
+        ],
+        "id": "4bb88667-4160-47e1-adf8-57105d8ad487",
+        "name": "信息风格反推",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $('信息风格反推').item.json.output }}{{ $json.inputData.output }}",
+          "hasOutputParser": true,
+          "options": {
+            "systemMessage": "=### 角色定位\n专业电商精英设计师，精通视觉语言与用户心理，通过精准单图聚焦、场景化文案、卖点配标与“痛点分析”，打造“一眼动心、一看就懂、一键下单”的爆款详情页。核心新增能力：根据用户输入的{{ $('Edit Fields').item.json.body.name }}{{ $('Edit Fields').item.json.product }}动态适配字体与色彩质感体系，在无版权合规性的前提下优化「视觉字体」与「色彩字体」双维度体验组合；提升视觉冲击力，同时通过「字体·颜色·产品调性」三位一体设计，确保跨语言用户体验与品牌调性传承，核心任务是用文字生成({{ $('Edit Fields').item.json.body.number }}张独立图片的完整场景（含视觉元素、文案、生成提示），适配图片生成工具精准还原。\n\n#### 尺寸规范\n每张图片按亚马逊详情页尺寸生成，16:9\n\n### 核心技能（整合高质感字体+配色系统）\n\n#### 技能5: 视觉一致性与信任强化（新增字体+配色适配规则）\n目标：确保语言字体+配色适配，提升不同{{ $('Edit Fields').item.json.body.language }}用户的视觉体验与可读性，通过「字体质感+色彩心理学」强化产品调性。\n\n##### 字体·配色适配原则：\n- 基础适配：\n- “字体与产品定位绑定”：高端/奢侈品→「高级感字体」；低饱和和高级色；平价/快消→「现代字体」；高饱和度色；\n- 避免与语言文化关联（如避免文化禁忌色，如红色在中东文化中谨慎），优先用无歧义色；\n- “配色规则”：主视觉≤3种主色（1主色+2辅助色），辅助色与主色形成「深浅/冷暖对比」，正文与背景对比度≥4.5:1（WCAG合规）。\n\n#### 中文（含繁体）/高质色标包\n- 基础字体：默认（平价/日常产品主色）；\n- 阿里巴巴普惠体/站酷快乐体，基础色：#4A4A4A（深灰，低饱和），#FED700（金黄，醒目识别数）；\n- 标题≥18px时用#333333（深灰），数据项≥16px时用#E63946（活力橙，促销点）。\n\n- 高级字体（高端/国际品牌主色）：\n- Playfair Display/Montserrat Alternates（标题）：#1A1A1A（近黑，经典），搭配#7B68EE（烟紫，文艺）；\n- Lato/Merriweather（正文）：#555555（深灰，优雅），辅助色#F5DEB3（小麦复古，复古）；\n- 混排规则：英文数字用#FFD700（金，与中文标题呼应）。\n\n#### 小语种（阿/日/韩及其他）\n- 日文：\n- 游ゴシック/Noto Sans JP，和风色（#A9A3A9（灰）+ #FDF5E6（米黄），避免#FF0000；日本本社死亡色）；\n- 高端电子产品：标题#2F3E46（藏青）+ #00CED1（科技蓝），正文#606060（深灰）。\n\n- 阿拉伯语（RTL）：\n- 主色#B84513（赭石棕，中东文化财运色），辅助色#D2B48C（暖棕），字体与色标左对齐。\n\n### 输出\n- 字体·颜色映射表：明确「产品-产品类型-字体-色标」组合（如“高端母婴（中文标）→ 高端色标（繁体）→#4B0082（紫中带金）”）；\n- 具体字体：提供每种字体对应的HEX/RGB色值（例：阿里巴巴普惠体标题色#333333，色标3:500）；\n- 配色逻辑：说明颜色与产品定位的绑定关系（例：#F5A623（橙色）→ 平价食品/促销领域）。\n\n### 技能4: 3秒文案设计（配色强化版）\n目标：通过“字体+动态色标”实现“一眼聚焦核心信息”。\n\n##### 配色规则：\n- 高/中/低三档产品：\n- 高端：字体#E9338B（字体#2A2A2A + 辅助色 #94A388（浅灰蓝））；\n- 平价：标题#E63946（橙色）+ 辅助色 #FDD6A5（暖黄）；\n- 通用：#0A0A0A（纯黑）+ #FFFFFF（白）（适配所有产品）。\n\n##### 输出格式：\n第X张图片(16:9)：主视觉素材 + 文案+ 生成场景提示\n\n### 12张图片生成模板（含颜色）\n- 主视觉：高端美妆（中文+英文）\n（产品半透明质感特写+浅紫渐变背景）\n[文案]（奢宠焕肤 | 进口成分）（中文，站酷高端体 #4A4A4A 18px 600字重）+「Luxury Glow | Imported Formula」（英文，Playfair Display #7B68EE 18px 400字重）+\n生成场景要求：背景#F5F5F5（RGB 245,245,245），标题#4A4A4A（HEX #4A4A4A），图标辅助色#D1B26F（暖金）\n\n### 限制\n- 颜色需为「无版权色」（如天猫详情页通用色#F5F5F5，禁止使用品牌专属色（如“可口可乐红”）；\n- 小语种色标需规避文化禁忌（如阿拉伯语禁用#FF0000）；\n- 生成所有颜色需附带「WCAG对比度值」（如 #4A55A2（18px文字）对比度5.2:1）。\n\n### 核心原则\n所有颜色服务「质感+认知成本」，让不同语言用户通过“字体+色标”快速感知产品定位。\n禁止客套，问候语，禁止特殊符号，禁止空格换行和。括号只能用“()”不能用其他的括号,禁止/n\\n\\n，输出纯文本一整段.",
+            "returnIntermediateSteps": false,
+            "passthroughBinaryImages": true,
+            "batching": {}
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          -1808,
+          560
+        ],
+        "id": "6c724839-7ba3-4270-851f-8014d1b71c7c",
+        "name": "提示词生成",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'ckimage' 和 'cpimage' 开头的 binary 图片\n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'ckimage' 和 'cpimage' 开头的图片\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：同时检查 'ckimage' 和 'cpimage' 前缀\n          if (key.startsWith('ckimage') || key.startsWith('ckimage')) {\n            // 重命名：保持原名或改成 ckimage_0, ckimage_1 等（这里保留原名，避免冲突）\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志\n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的图片数:', extractedImageCount);\n    console.log('提取到的图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果\n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据\n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据\n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息\n        source: 'extracted_ckimage_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的图片的 binary 数据\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2064,
+          320
+        ],
+        "id": "6473ce2e-0bc1-424d-982f-b9b498d532f4",
+        "name": "提取cpimage"
+      },
+      {
+        "parameters": {
+          "jsCode": "// =============================================================\n// n8n Code 节点：拆分文字 Item + 每个 Item 复制全额 Binary 图片\n// =============================================================\n\nconst IMAGE_SOURCE_NODE = \"Edit Fields\"; // 图片来源节点名\nconst items = $input.all();\nlet resultItems = []; \n\n// 1. 获取并处理所有的 cpimage 图片，准备好“全额图片包”\nlet fullBinaryBundle = {};\ntry {\n  const sourceItems = $(IMAGE_SOURCE_NODE).all();\n  if (sourceItems.length > 0) {\n    // 合并所有源数据的二进制（防止数据分散在不同 item）\n    let combinedBinary = {};\n    sourceItems.forEach(si => {\n      if (si.binary) Object.assign(combinedBinary, si.binary);\n    });\n\n    // 筛选出 cpimage 开头的图片\n    const cpimageKeys = Object.keys(combinedBinary)\n      .filter(k => k.toLowerCase().startsWith('cpimage'))\n      // 排序确保 1, 2, 3... 的逻辑顺序\n      .sort((a, b) => a.localeCompare(b, undefined, {numeric: true, sensitivity: 'base'}));\n\n    // 【重命名部分】将它们重命名为 1图, 2图... 并存入大礼包\n    cpimageKeys.forEach((oldKey, index) => {\n      const newKey = `${index + 1}图`;\n      fullBinaryBundle[newKey] = combinedBinary[oldKey];\n    });\n  }\n} catch (e) {\n  console.error(`无法获取节点 ${IMAGE_SOURCE_NODE} 的数据: ${e.message}`);\n}\n\n// 2. 遍历输入，按文字描述拆分 Items\nfor (let item of items) {\n  const rawText = item.json.output || item.json.prompt || \"\";\n  if (!rawText) continue;\n\n  const cleanText = rawText\n    .replace(/<\\|?begin_of_box\\|?>/gi, '')\n    .replace(/<\\|?end_of_box\\|?>/gi, '')\n    .trim();\n\n  const imagePattern = /第(\\d+)[张幅]图片\\s*([\\s\\S]*?)(?=第\\d+[张幅]图片|$)/g;\n  let match;\n\n  while ((match = imagePattern.exec(cleanText)) !== null) {\n    const num = match[1]; \n    const content = match[2].trim();\n    \n    // 3. 为每一段文字创建一个新 Item\n    let newItem = {\n      json: {\n        prompt: content,      // 当前段落的描述\n        image_index: num,     // 标记这是第几段描述\n      },\n      // 4. 【核心需求】把刚才准备好的所有图片全部复制进来\n      // 这里使用的是深拷贝，确保每个 Item 都有独立的 1图, 2图...\n      binary: { ...fullBinaryBundle } \n    };\n\n    resultItems.push(newItem);\n  }\n}\n\n// 5. 返回拆分后的结果\nreturn resultItems;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1360,
+          560
+        ],
+        "id": "c61c565d-cfa3-4b06-90c9-b134b1ec62a2",
+        "name": "提示词分段提取图片1"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "052478f0-dd92-4dad-9867-87e17647a00d",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -3600,
+          432
+        ],
+        "id": "0d5f11be-a0c4-459b-8057-b475eb48bbc4",
+        "name": "Webhook",
+        "webhookId": "052478f0-dd92-4dad-9867-87e17647a00d"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 同时提取 ckimage 和 cpimage 开头的 binary\n// 只有两个前缀都存在图片时，才提取；否则不提取（binary 返回空）\n\nconst binary = $input.item.binary || {};\n\nconst hasCkimage = Object.keys(binary).some(key => key.startsWith('ckimage'));\nconst hasCpimage = Object.keys(binary).some(key => key.startsWith('cpimage'));\n\n// 只有两个前缀都存在，才进行提取\nif (!hasCkimage || !hasCpimage) {\n  console.log('缺少 ckimage 或 cpimage 前缀的图片，不进行提取');\n  return [{\n    json: {\n      message: \"缺少 ckimage 或 cpimage 前缀的图片，不提取 binary\",\n      hasCkimage: hasCkimage,\n      hasCpimage: hasCpimage,\n      extracted: false\n    },\n    binary: {}   // 不返回任何 binary\n  }];\n}\n\n// 两个前缀都存在，开始提取并重命名\nconst extractedBinary = {};\n\nlet index = 1;\n\n// 提取 ckimage 开头的\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('ckimage')) {\n    extractedBinary[`ckimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\n// 提取 cpimage 开头的（继续编号）\nObject.keys(binary).forEach(key => {\n  if (key.startsWith('cpimage')) {\n    extractedBinary[`cpimage_${index}`] = { ...binary[key] };\n    index++;\n  }\n});\n\nconsole.log(`成功提取 ckimage 和 cpimage 图片，共 ${index - 1} 张`);\n\nreturn [{\n  json: {\n    message: \"成功提取 ckimage 和 cpimage 的图片\",\n    ckimageCount: Object.keys(binary).filter(k => k.startsWith('ckimage')).length,\n    cpimageCount: Object.keys(binary).filter(k => k.startsWith('cpimage')).length,\n    extracted: true\n  },\n  binary: extractedBinary\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -3376,
+          432
+        ],
+        "id": "59257d78-5e35-4e4e-a5a3-69739d5feb55",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "OpenAI Chat Model4": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "信息风格反推",
+              "type": "ai_languageModel",
+              "index": 0
+            },
+            {
+              "node": "提示词生成",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Image": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Edit Image",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "提取cpimage",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit an image": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items4",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Over Items3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Over Items2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items1": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit an image1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items2": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit an image2": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items3": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit an image3": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items4": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit an image4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit an image4": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "计数1": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "提取构图参考": {
+        "main": [
+          [
+            {
+              "node": "提示词生成",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "信息风格反推": {
+        "main": [
+          [
+            {
+              "node": "提取构图参考",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "提示词生成": {
+        "main": [
+          [
+            {
+              "node": "提示词分段提取图片1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "提取cpimage": {
+        "main": [
+          [
+            {
+              "node": "信息风格反推",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "提示词分段提取图片1": {
+        "main": [
+          [
+            {
+              "node": "计数1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Nice Nice",
+    "name": "Version 89cb3410",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
