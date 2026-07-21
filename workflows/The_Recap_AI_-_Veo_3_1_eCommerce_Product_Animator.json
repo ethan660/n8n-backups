@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026-07-06T01:04:35.152Z",
+  "createdAt": "2026-07-03T07:44:45.227Z",
+  "id": "SWuWaQLjHOGhZjJi",
+  "name": "The Recap AI - Veo 3.1 eCommerce Product Animator",
+  "active": false,
+  "isArchived": false,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ddb8ba23-1049-4d15-aad3-84cf8bc3678e",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-03T07:44:45.227Z",
+      "createdAt": "2026-07-03T07:44:45.227Z",
+      "role": "workflow:owner",
+      "workflowId": "SWuWaQLjHOGhZjJi",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
