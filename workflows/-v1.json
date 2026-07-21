@@ -1,0 +1,383 @@
+{
+  "updatedAt": "2026-05-12T02:45:43.351Z",
+  "createdAt": "2026-05-12T02:28:19.550Z",
+  "id": "_Mb68MSO_C9bnzKL4mKl0",
+  "name": "电商详情页品类分流-v1",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true,
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -800,
+        624
+      ],
+      "id": "25cce8aa-1b59-43c7-96c1-f78d237ba907",
+      "name": "When chat message received",
+      "webhookId": "d0e1f2a3-b4c5-4d6e-8f7a-000000000001"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.chatInput }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "运动户外",
+              "description": "徒步裤、运动鞋、背包、户外装备、运动服、泳衣、泳帽、泳镜、沙滩裤、登山用品"
+            },
+            {
+              "category": "母婴",
+              "description": "婴儿浴巾、玩具、辅食、婴儿用品、儿童服饰、宝宝用品、婴儿床、奶瓶、儿童"
+            },
+            {
+              "category": "套装装饰",
+              "description": "气球套装、圣诞装饰球、派对用品、彩灯、节日装饰、气球花环、婚礼装饰套装"
+            },
+            {
+              "category": "家居绿植",
+              "description": "假花、仿真花、藤条、花环、人造植物、假藤条、仿真绿植、人造花束"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -528,
+        592
+      ],
+      "id": "66b9403c-fa3e-4230-867d-7a2b7b9fd344",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "你是亚马逊运动户外类电商详情页生图专家，专为徒步裤、运动鞋、背包、户外装备、泳装等品类服务。\n根据用户输入的产品信息，输出6张详情图的生成提示词，严格按以下结构：\n图1(1464×600px) Hero Banner：真人户外场景大图+品类大标题+Amazon信任徽章，白色Montserrat Black 42px标题，背景户外自然实景\n图2(1200×600px) 功能双图：左图产品平铺+标注线箭头指向具体功能位置，右图产品细节特写+圆角功能徽章，背景纯白\n图3(1200×675px) 设计大标题：居中全大写slogan(字重800+)，中央真人穿着正面照，四周对称排列4个功能标注标签\n图4(800×600px) 细节4宫格：2×2网格，每格产品功能特写+功能标题(Montserrat Bold 18px)+1行说明\n图5(1200×600px) 尺码表：左侧真人穿着参考图，右侧含Waist/Hip/Length等列的尺寸数据表格(表头用产品主色)，底部品牌Logo\n图6(1200×600px) 场景收尾：户外自然场景大图，极少文字，纯情绪氛围\n配色规则：产品主色作为唯一品牌色，其余用#FFFFFF/#333333/#1A1A1A中性色，字体Montserrat体系\n每张输出格式：第X张图片(尺寸)：主视觉描述+文案内容+生成场景要求\n禁止问候语，禁止特殊符号，只用半角括号()，输出纯文本"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        80
+      ],
+      "id": "a3f63604-7391-4958-8767-656847f3f786",
+      "name": "运动户外-Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "你是亚马逊母婴类电商详情页生图专家，专为婴儿浴巾、玩具、辅食、婴儿用品等品类服务。\n根据用户输入的产品信息，输出7张详情图的生成提示词，严格按以下结构：\n图1(1464×600px) Hero Banner：婴儿/儿童使用场景暖色大图+品牌名+品类名+核心材质，Nunito ExtraBold字体，背景暖米#FFF8F0\n图2(1200×600px) 材质卖点：材质名大标题居中，6个功能图标卡片(圆形图标+功能名+1行说明，2列×3行)，pastel暖色图标\n图3(1200×600px) 适龄分级：顶部尺寸参数大字，下方4张分龄场景照片横排(Newborn/Baby/Toddler/Children各一张)\n图4(1200×675px) 功能特写：左侧大幅产品使用场景照片，右侧3个功能标注(图标+粗体标题+1行说明，上中下排列)\n图5(1200×600px) 多场景展示：手写风标题Meet Your Babys Different Needs，6个圆形气泡图各含使用场景照片+场景名\n图6(1200×600px) 送礼场景：妈妈和孩子温馨场景，手写感标题Ideal for showers and birthdays，暖色调\n图7(800×600px) 洗涤说明：Washing Care标题+4个洗涤图标(禁漂白/晾干/不可烘干/不可机洗)+简短说明\n配色规则：暖米#FFF8F0或薄荷绿背景跟随产品色系，pastel点缀，字体Nunito/Quicksand，小装饰元素不超过3个/图\n每张输出格式：第X张图片(尺寸)：主视觉描述+文案内容+生成场景要求\n禁止问候语，禁止特殊符号，只用半角括号()，输出纯文本"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        384
+      ],
+      "id": "37589447-dec1-4e8f-adc6-b9b28120c0d9",
+      "name": "母婴-Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "你是亚马逊套装装饰类电商详情页生图专家，专为气球套装、圣诞装饰球、派对用品、节日装饰等品类服务。\n根据用户输入的产品信息，输出6张详情图的生成提示词，严格按以下结构：\n图1(1464×600px) Hero Banner：节日氛围布置完成的大场景图(派对/圣诞/婚礼现场)，顶部手写体品牌名，醒目数量大字(如129Pcs/72PCS)突出套装价值感\n图2(1200×675px) 套装清单：纯白背景全量配件平铺展示，右侧bullet list逐项列出(数量+规格+配件名)，顶部标注套装总件数\n图3(1200×600px) 使用步骤：How to Use/How to Make标题，3-4步横向流程图(编号圆圈用产品主题色，每步含小图+说明)\n图4(1200×600px) 布置效果：3×2宫格，6张不同角度/不同空间的真实布置效果照片\n图5(800×600px) 产品参数：简洁参数框(数量/颜色/材质/适用场景)，旁配产品特写照片，背景纯白\n图6(1200×400px) SKU色版对比：3-4个颜色版本横向并排(如Red&Gold/White&Silver/Green&Gold)，每版标注色版名\n配色规则：节日主题高饱和色系，背景纯白留白60%以上，Pacifico手写体(品牌/情绪标题)+Montserrat Bold(内容标题)\n每张输出格式：第X张图片(尺寸)：主视觉描述+文案内容+生成场景要求\n禁止问候语，禁止特殊符号，只用半角括号()，输出纯文本"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        688
+      ],
+      "id": "0cb45f9e-4101-4dfe-bfe1-a213fb60bc77",
+      "name": "套装装饰-Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When chat message received').item.json.chatInput }}",
+        "options": {
+          "systemMessage": "你是亚马逊家居绿植类电商详情页生图专家，专为假花、仿真花、藤条花环、人造植物等家居装饰品类服务。\n根据用户输入的产品信息，输出6张详情图的生成提示词，严格按以下结构：\n图1(1464×600px) Hero Banner：真实家居/婚礼/花园场景大图，左侧数量或尺寸大字(如20 Bundles/6.56ft)用Montserrat ExtraBold 48px突出价值感\n图2(1200×600px) 规格参数卡：圆角卡片样式含尺寸/颜色/数量/材质参数，右侧产品白底特写，背景暖米#FAF7F2\n图3(1200×675px) 情绪场景图：占满全幅的婚礼/客厅/花园高质感照片，左侧叠加大字slogan(Playfair Display Italic #2D5A27 32px)\n图4(1200×600px) 功能文案：左文右图布局，2-3个核心使用场景说明(壁炉架/楼梯扶手/婚礼拱门等)，每场景附真实照片\n图5(1200×600px) 多场景宫格：4-6张不同空间真实搭配照片(客厅/玄关/婚礼/门廊/阳台)，宫格排列无文字遮挡\n图6(800×400px) 4大卖点标签：横排4个圆角标签(Can be Reshaped/No Assemble Required/Elegant Home Decor/Natural Looking)\n配色规则：暖米#FAF7F2或浅绿#F0F5EE背景(禁止纯白)，深绿#2D5A27主文字，Playfair Display衬线(情绪标题)+Lato(正文)\n每张输出格式：第X张图片(尺寸)：主视觉描述+文案内容+生成场景要求\n禁止问候语，禁止特殊符号，只用半角括号()，输出纯文本"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        992
+      ],
+      "id": "66ee2b10-0d0e-41a5-aefd-88dbd2d2512d",
+      "name": "家居绿植-Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        80
+      ],
+      "id": "b85ed78c-6ba3-44c6-9907-51813ce825f9",
+      "name": "Chat-运动户外",
+      "webhookId": "d0e1f2a3-b4c5-4d6e-8f7a-000000000008"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        384
+      ],
+      "id": "3133fe64-4468-4355-ade4-4a657234f9e9",
+      "name": "Chat-母婴",
+      "webhookId": "d0e1f2a3-b4c5-4d6e-8f7a-000000000009"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        688
+      ],
+      "id": "51fc1b59-b69c-4d7f-b704-d38b4108abb3",
+      "name": "Chat-套装装饰",
+      "webhookId": "d0e1f2a3-b4c5-4d6e-8f7a-000000000010"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        992
+      ],
+      "id": "e684ac22-b860-4cb6-82f1-ed47d1e0d49c",
+      "name": "Chat-家居绿植",
+      "webhookId": "d0e1f2a3-b4c5-4d6e-8f7a-000000000011"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        944
+      ],
+      "id": "1035711d-32a6-4bf6-8c9c-89faab41f96e",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "KL03kobsDz6vqpU4",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        896
+      ],
+      "id": "6c8d1945-6976-40ca-b7eb-40e096a6ba70",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "4h3AA9UIed1lWM83",
+          "name": "bolatu"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "运动户外-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "母婴-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "套装装饰-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "家居绿植-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "运动户外-Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat-运动户外",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "母婴-Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat-母婴",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "套装装饰-Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat-套装装饰",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "家居绿植-Agent": {
+      "main": [
+        [
+          {
+            "node": "Chat-家居绿植",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "母婴-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "运动户外-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "套装装饰-Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ca3952bc-5e3a-4ebb-b6f1-e6f400047343",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-12T02:28:19.550Z",
+      "createdAt": "2026-05-12T02:28:19.550Z",
+      "role": "workflow:owner",
+      "workflowId": "_Mb68MSO_C9bnzKL4mKl0",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
