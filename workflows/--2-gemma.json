@@ -1,0 +1,683 @@
+{
+  "updatedAt": "2026-05-14T07:45:02.534Z",
+  "createdAt": "2026-04-30T02:44:12.056Z",
+  "id": "8FF5Bt7BtY_I8MCmyFQGG",
+  "name": "多产品测试--2-gemma模型",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3664,
+        16
+      ],
+      "id": "6fbedfe4-4153-49a2-88a0-0a33a7116267",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($input.item.binary).join(',') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        656,
+        256
+      ],
+      "id": "c3a79a18-4bed-4b6e-a726-93f887e8b3ac",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        480,
+        256
+      ],
+      "id": "6a05f6d9-18f1-472a-bc1b-581aead171df",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "={{ Object.keys($binary)[0] }}",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        832,
+        256
+      ],
+      "id": "8b567145-da49-4937-b699-f20b87ef3e5e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_images",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3376,
+        16
+      ],
+      "id": "a4c3a79d-0c0d-41f9-bf0a-b0cef8d5e565",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3936,
+        16
+      ],
+      "id": "a1c6d45a-4495-480e-a117-6494eb796a64",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "706563f9-734e-413f-bc21-859c1c9fc7fc",
+              "name": "body.name",
+              "value": "={{ $('Webhook1').item.json.body.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1008,
+        256
+      ],
+      "id": "05abf4fe-9a2b-4c0d-bd8f-1d270c6bbec5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2d4f615b-b8ec-4293-8aea-b48ce747c400",
+              "leftValue": "={{ Object.keys($binary)[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        112
+      ],
+      "id": "bf86bf04-0e28-4e5c-9742-464211808832",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        16
+      ],
+      "id": "88033b99-842f-4102-baca-12ca1a1dd231",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2832,
+        32
+      ],
+      "id": "a7a47ed3-37a0-425b-9ad5-376827d8ec5d",
+      "name": "Loop Over Items4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码（JavaScript）\n// 功能：\n// 1) 获取当前节点输入数据\n// 2) 提取当前输入 binary 中所有图片\n// 3) 获取 Edit Fields 节点 cpimage* 图片\n// 4) 生成 cleanJsonString\n// 5) 从上游文字中提取“第二部分：AI生成提示词”\n// 6) 将输出图片键名重命名为：1图、2图、3图...\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 获取当前节点输入\n    const inputItems = $input.all();\n    const firstInput = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputJson = firstInput.json || {};\n    const inputBinary = firstInput.binary || {};\n\n    // 2. 提取当前输入中的所有 binary\n    const allImages = {};\n    let totalImageCount = 0;\n\n    Object.keys(inputBinary).forEach((key) => {\n      if (inputBinary[key]) {\n        allImages[key] = { ...inputBinary[key] };\n        totalImageCount++;\n      }\n    });\n\n    console.log(\"当前输入 binary 总键数:\", Object.keys(inputBinary).length);\n    console.log(\"提取到的图片数:\", totalImageCount);\n    console.log(\"图片键名列表:\", Object.keys(allImages));\n\n    // 3. 获取 Edit Fields 节点的 cpimage*\n    let editFieldsImages = [];\n    let editFieldsBinary = {};\n    let editFieldsImageCount = 0;\n    let editFieldsConnected = false;\n\n    try {\n      const editFieldsItems = $(\"Edit Fields\").all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        editFieldsItems.forEach((item, idx) => {\n          const itemBinary = item.binary || {};\n\n          Object.keys(itemBinary).forEach((key) => {\n            if (key.startsWith(\"cpimage\") && itemBinary[key]) {\n              const img = itemBinary[key];\n              editFieldsImages.push({\n                fieldName: key,\n                fileName: img.fileName || \"\",\n                mimeType: img.mimeType || \"\",\n                fileExtension: img.fileExtension || \"\",\n                fileSize: img.fileSize || \"\",\n                sourceItemIndex: idx,\n              });\n\n              editFieldsBinary[`editFields_${key}_${idx}`] = { ...itemBinary[key] };\n              editFieldsImageCount++;\n            }\n          });\n        });\n\n        if (editFieldsImageCount > 0) {\n          editFieldsConnected = true;\n          console.log(`成功从 Edit Fields 节点提取 ${editFieldsImageCount} 张图片`);\n        }\n      }\n    } catch (editFieldsErr) {\n      console.log(\"获取 Edit Fields 失败:\", editFieldsErr.message);\n    }\n\n    // 4. 生成 cleanJsonString\n    let cleanJsonString = \"\";\n    try {\n      cleanJsonString = JSON.stringify(inputJson);\n    } catch (jsonErr) {\n      console.log(\"生成干净字符串失败:\", jsonErr.message);\n      cleanJsonString = JSON.stringify(inputJson);\n    }\n\n    // 提取“第二部分：AI生成提示词”\n    const extractSecondPart = (text) => {\n      if (typeof text !== \"string\" || !text.trim()) return \"\";\n\n      const normalized = text.replace(/\\r\\n/g, \"\\n\");\n      const match = normalized.match(\n        /###\\s*第二部分[^\\n]*\\n+([\\s\\S]*?)(?:\\n###\\s*第三部分[^\\n]*|$)/i\n      );\n\n      if (!match || !match[1]) return \"\";\n      return match[1].trim();\n    };\n\n    // 兼容不同输入结构，尽量找到上游 output 文本\n    let upstreamOutputText = \"\";\n    if (typeof inputJson.output === \"string\") {\n      upstreamOutputText = inputJson.output;\n    } else if (Array.isArray(inputJson) && inputJson[0] && typeof inputJson[0].output === \"string\") {\n      upstreamOutputText = inputJson[0].output;\n    } else if (Array.isArray(inputItems) && inputItems[0]?.json?.output) {\n      upstreamOutputText = String(inputItems[0].json.output);\n    }\n\n    const secondPartRaw = extractSecondPart(upstreamOutputText);\n\n    // 去掉首尾括号/引号\n    let secondPartPrompt = secondPartRaw;\n    if (secondPartPrompt.startsWith('\"') && secondPartPrompt.endsWith('\"')) {\n      secondPartPrompt = secondPartPrompt.slice(1, -1).trim();\n    }\n    if (secondPartPrompt.startsWith(\"(\") && secondPartPrompt.endsWith(\")\")) {\n      secondPartPrompt = secondPartPrompt.slice(1, -1).trim();\n    }\n\n    // 5. 合并 binary\n    const mergedBinaryRaw = {\n      ...allImages,\n      ...editFieldsBinary,\n    };\n\n    // 6. 统一重命名 binary 键名为：1图、2图、3图...\n    const renamedBinary = {};\n    const imageKeyMap = []; // oldKey -> newKey 方便排查\n\n    Object.keys(mergedBinaryRaw).forEach((oldKey, index) => {\n      const newKey = `${index + 1}图`;\n      const img = { ...mergedBinaryRaw[oldKey] };\n\n      // 同步改 fileName（保留原扩展名）\n      const ext =\n        img.fileExtension ||\n        (img.fileName && img.fileName.includes(\".\")\n          ? img.fileName.split(\".\").pop()\n          : \"\");\n      img.fileName = ext ? `${newKey}.${ext}` : newKey;\n\n      renamedBinary[newKey] = img;\n      imageKeyMap.push({ oldKey, newKey });\n    });\n\n    // 7. 返回\n    return [\n      {\n        json: {\n          inputData: inputJson,\n\n          allImages: allImages,\n          totalImageCount: totalImageCount,\n          imageKeys: Object.keys(allImages),\n\n          editFieldsImages: editFieldsImages,\n          editFieldsImageCount: editFieldsImageCount,\n          editFieldsConnected: editFieldsConnected,\n\n          finalTotalImageCount: Object.keys(renamedBinary).length,\n          source: \"merged_all_images_and_editFields\",\n\n          cleanJsonString: cleanJsonString,\n\n          upstreamOutputText: upstreamOutputText,\n          secondPartRaw: secondPartRaw,\n          secondPartPrompt: secondPartPrompt,\n\n          // 新增：重命名后的键名与映射\n          renamedImageKeys: Object.keys(renamedBinary), // [\"1图\",\"2图\"...]\n          imageKeyMap: imageKeyMap\n        },\n        binary: renamedBinary,\n      },\n    ];\n  } catch (err) {\n    console.log(\"执行失败:\", err.message);\n    return [\n      {\n        json: {\n          error: \"执行失败\",\n          errorDetail: err.message,\n        },\n      },\n    ];\n  }\n};\n\n// 执行\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        32
+      ],
+      "id": "16d33065-5f3b-4530-bf5e-64ec4e7141f3",
+      "name": "提取构图参考"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.33.113:11434/api/chat",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"nemotron3:33b-q4_K_M\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"你好，请简单介绍一下你自己。\"\n    }\n  ],\n  \"stream\": false,\n  \"options\": {\n    \"temperature\": 0.7,\n    \"num_ctx\": 8192\n  }\n}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2048,
+        32
+      ],
+      "id": "62dff448-889a-4459-8755-73d251030b17",
+      "name": "HTTP gemini-2.2",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'ckimage' 和 'cpimage' 开头的 binary 图片\n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'ckimage' 和 'cpimage' 开头的图片\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：同时检查 'ckimage' 和 'cpimage' 前缀\n          if (key.startsWith('ckimage') || key.startsWith('ckimage')) {\n            // 重命名：保持原名或改成 ckimage_0, ckimage_1 等（这里保留原名，避免冲突）\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志\n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的图片数:', extractedImageCount);\n    console.log('提取到的图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果\n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据\n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据\n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息\n        source: 'extracted_ckimage_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的图片的 binary 数据\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        256
+      ],
+      "id": "f6829e9d-bd85-4d93-963d-00e3420dce6b",
+      "name": "提取cpimage或者ckimage"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：安全转字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n// 获取上游的 chatInput (保持你原有的逻辑)\nconst getChatInput = () => {\n  try {\n    // ⚠️ 注意：请确认 'Code in JavaScript4' 是否真的是你存储 chatInput 的那个节点名称\n    // 如果不是，请改成正确的节点名字，或者如果当前节点就能拿到，直接读 $input.first().json.chatInput\n    const chatInput = toStr($input.first()?.json?.chatInput);\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\nconst base64_ckimage = [];\n\n// 遍历所有输入项 (虽然你的场景可能只有1项，但循环更稳健)\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  // 【关键】从 json 中获取动态的图片键名列表\n  // 你的数据里有一个字段叫 extractedImageKeys: [\"ckimage0\", \"ckimage1\", ...]\n  const imageKeys = item.json.extractedImageKeys || [];\n\n  // 如果没有找到动态列表，尝试用旧方法兜底（以防万一）\n  const keysToProcess = imageKeys.length > 0 \n    ? imageKeys \n    : Object.keys(item.binary || {}).filter(k => k.startsWith('ckimage') || k.startsWith('cpimage') || k.startsWith('image'));\n\n  for (const key of keysToProcess) {\n    try {\n      // 【核心】使用 helpers 读取二进制缓冲区 (完美支持 filesystem-v2)\n      // 参数：(当前项索引, 二进制字段名)\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      \n      if (buf) {\n        // 转换为 base64 字符串\n        const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n        \n        if (b64) {\n          // 如果需要带 MIME 头 (如 data:image/png;base64,...)，可以取消下面这行的注释\n          // const mimeType = item.binary[key]?.mimeType || 'image/png';\n          // base64_ckimage.push(`data:${mimeType};base64,${b64}`);\n          \n          // 仅推送纯 base64 字符串 (根据你的原代码逻辑)\n          base64_ckimage.push(b64);\n        }\n      }\n    } catch (error) {\n      console.warn(`跳过图片 ${key}: ${error.message}`);\n    }\n  }\n}\n\n// 返回单一结果，包含聊天输入和所有图片的 base64 列表\nreturn [{\n  json: {\n    chatInput,\n    base64_ckimage,\n    count: base64_ckimage.length // 额外返回一个数量，方便调试\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        256
+      ],
+      "id": "fd699115-3b27-4fef-8484-0200cf3bec83",
+      "name": "binary转换base64"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1584,
+        32
+      ],
+      "id": "70aa86cd-ed3c-49ce-9d5d-364623036ed3",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：主动获取 Edit Fields 节点的输出数据，并提取其中所有以 'ckimage' 和 'cpimage' 开头的 binary 图片\n// 返回：包含 Edit Fields 节点的 JSON 数据和提取出的图片的数据结构\n// ================================================\n\nconst processInputAndImages = () => {\n  try {\n    // 1. 主动获取 Edit Fields 节点的输出数据\n    let editFieldsData = {};\n    let editFieldsBinary = {};\n    let extractedImages = {};\n    let extractedImageCount = 0;\n\n    try {\n      const editFieldsItems = $('Edit Fields').all();\n\n      if (editFieldsItems && editFieldsItems.length > 0) {\n        // 假设我们处理第一个 item\n        const firstItem = editFieldsItems[0];\n        editFieldsData = firstItem.json || {};\n        editFieldsBinary = firstItem.binary || {};\n\n        // 2. 从 Edit Fields 的 binary 数据中提取所有以 'ckimage' 和 'cpimage' 开头的图片\n        Object.keys(editFieldsBinary).forEach(key => {\n          // 修改点：同时检查 'ckimage' 和 'cpimage' 前缀\n          if (key.startsWith('cpimage') || key.startsWith('cpimage')) {\n            // 重命名：保持原名或改成 ckimage_0, ckimage_1 等（这里保留原名，避免冲突）\n            extractedImages[key] = { ...editFieldsBinary[key] };  // 深拷贝 binary 对象\n            extractedImageCount++;\n          }\n        });\n      }\n    } catch (editFieldsErr) {\n      console.log('获取 Edit Fields 节点失败:', editFieldsErr.message);\n      return [{\n        json: {\n          error: '获取 Edit Fields 节点失败',\n          errorDetail: editFieldsErr.message\n        }\n      }];\n    }\n\n    // 调试日志\n    console.log('Edit Fields binary 总键数:', Object.keys(editFieldsBinary).length);\n    console.log('从 Edit Fields 提取到的图片数:', extractedImageCount);\n    console.log('提取到的图片键名列表:', Object.keys(extractedImages));\n\n    // 3. 返回结果\n    return [{\n      json: {\n        // Edit Fields 节点的原始 JSON 数据\n        editFieldsData: editFieldsData,\n\n        // 提取出的图片元数据\n        extractedImages: extractedImages,\n        extractedImageCount: extractedImageCount,\n        extractedImageKeys: Object.keys(extractedImages),\n\n        // 源信息\n        source: 'extracted_ckimage_cpimage_from_Edit_Fields'\n      },\n\n      // 包含所有从 Edit Fields 提取出的图片的 binary 数据\n      binary: extractedImages\n    }];\n\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn processInputAndImages();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        48
+      ],
+      "id": "1fc6f292-c89e-4a1c-84c1-698c7a829fb8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// 辅助函数：安全转字符串\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\n// 获取上游的 chatInput (保持你原有的逻辑)\nconst getChatInput = () => {\n  try {\n    const chatInput = toStr($input.first()?.json?.chatInput);\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\n\n// 【修改点】变量名从 base64_list 改为 base64_cpimage\nconst base64_cpimage = [];\n\n// 遍历所有输入项\nfor (let i = 0; i < items.length; i++) {\n  const item = items[i];\n  \n  // 从 json 中获取动态的图片键名列表\n  const imageKeys = item.json.extractedImageKeys || [];\n\n  // 如果没有找到动态列表，尝试用旧方法兜底\n  const keysToProcess = imageKeys.length > 0 \n    ? imageKeys \n    : Object.keys(item.binary || {}).filter(k => k.startsWith('ckimage') || k.startsWith('cpimage') || k.startsWith('image'));\n\n  for (const key of keysToProcess) {\n    try {\n      // 使用 helpers 读取二进制缓冲区\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      \n      if (buf) {\n        // 转换为 base64 字符串\n        const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n        \n        if (b64) {\n          // 【修改点】推入新变量名 base64_cpimage\n          base64_cpimage.push(b64);\n        }\n      }\n    } catch (error) {\n      console.warn(`跳过图片 ${key}: ${error.message}`);\n    }\n  }\n}\n\n// 【修改点】返回结果中使用新变量名 base64_cpimage\nreturn [{\n  json: {\n    chatInput,\n    base64_cpimage,       // 这里改了\n    count: base64_cpimage.length // 这里也对应改了\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        48
+      ],
+      "id": "b208033d-a488-481e-ba88-bde6e7d3c76b",
+      "name": "binary转换base64-"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入项 (Merge 节点输出的 2 个 item)\nconst items = $input.all();\n\n// 初始化结果对象\nconst result = {\n  base64_cpimage: [],\n  base64_ckimage: [],\n  chatInput: '' \n};\n\n// 遍历所有 item，把数据归类到同一个对象里\nfor (const item of items) {\n  // 1. 收集 cpimage\n  if (item.json.base64_cpimage && Array.isArray(item.json.base64_cpimage)) {\n    result.base64_cpimage.push(...item.json.base64_cpimage);\n  }\n  \n  // 2. 收集 ckimage\n  if (item.json.base64_ckimage && Array.isArray(item.json.base64_ckimage)) {\n    result.base64_ckimage.push(...item.json.base64_ckimage);\n  }\n\n  // 3. 顺便把 chatInput 也拿过来 (防止丢失)\n  if (!result.chatInput && item.json.chatInput) {\n    result.chatInput = item.json.chatInput;\n  }\n}\n\n// 【关键】只返回 1 个 item，包含两个数组字段\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        32
+      ],
+      "id": "1528b6fe-185d-4957-84f8-51b42460c9ce",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "395ca466-1e30-4f01-9014-406e868fd7e7",
+              "name": "output",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        -176
+      ],
+      "id": "db89be09-7083-443e-bdcb-d56d4e8f6022",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 同时提取 ckimage 和 cpimage 开头的 binary\n// 只有两个前缀都存在图片时，才提取；否则不提取（binary 返回空）\n// 新增功能：提取像素 + 匹配最接近比例（但保持原 binary 键名不变）\n\nconst TARGET_RATIOS = [\n  { label: \"1:1\", value: 1 / 1 },\n  { label: \"16:9\", value: 16 / 9 },\n  { label: \"2:3\", value: 2 / 3 },\n  { label: \"21:9\", value: 21 / 9 },\n  { label: \"3:2\", value: 3 / 2 },\n  { label: \"3:4\", value: 3 / 4 },\n  { label: \"4:3\", value: 4 / 3 },\n  { label: \"4:5\", value: 4 / 5 },\n  { label: \"5:4\", value: 5 / 4 },\n  { label: \"9:16\", value: 9 / 16 },\n];\n\nfunction getClosestRatio(width, height) {\n  if (!width || !height) return null;\n  const actual = width / height;\n\n  let best = TARGET_RATIOS[0];\n  let minDiff = Math.abs(actual - best.value);\n\n  for (let i = 1; i < TARGET_RATIOS.length; i++) {\n    const diff = Math.abs(actual - TARGET_RATIOS[i].value);\n    if (diff < minDiff) {\n      minDiff = diff;\n      best = TARGET_RATIOS[i];\n    }\n  }\n\n  return {\n    closestRatio: best.label,\n    actualRatio: Number(actual.toFixed(6)),\n    ratioDiff: Number(minDiff.toFixed(6)),\n  };\n}\n\nfunction parsePng(buf) {\n  if (buf.length < 24) return null;\n  const sig = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];\n  for (let i = 0; i < sig.length; i++) {\n    if (buf[i] !== sig[i]) return null;\n  }\n  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20), format: \"png\" };\n}\n\nfunction parseGif(buf) {\n  if (buf.length < 10) return null;\n  const header = buf.toString(\"ascii\", 0, 6);\n  if (header !== \"GIF87a\" && header !== \"GIF89a\") return null;\n  return { width: buf.readUInt16LE(6), height: buf.readUInt16LE(8), format: \"gif\" };\n}\n\nfunction parseJpeg(buf) {\n  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) return null;\n\n  let offset = 2;\n  while (offset + 9 < buf.length) {\n    if (buf[offset] !== 0xff) {\n      offset++;\n      continue;\n    }\n\n    const marker = buf[offset + 1];\n    offset += 2;\n\n    if (marker === 0xd8 || marker === 0xd9) continue;\n    if (offset + 1 >= buf.length) break;\n\n    const segmentLength = buf.readUInt16BE(offset);\n    if (segmentLength < 2 || offset + segmentLength > buf.length) break;\n\n    const isSOF =\n      (marker >= 0xc0 && marker <= 0xc3) ||\n      (marker >= 0xc5 && marker <= 0xc7) ||\n      (marker >= 0xc9 && marker <= 0xcb) ||\n      (marker >= 0xcd && marker <= 0xcf);\n\n    if (isSOF) {\n      const height = buf.readUInt16BE(offset + 3);\n      const width = buf.readUInt16BE(offset + 5);\n      return { width, height, format: \"jpeg\" };\n    }\n\n    offset += segmentLength;\n  }\n\n  return null;\n}\n\nfunction parseWebp(buf) {\n  if (buf.length < 30) return null;\n  if (buf.toString(\"ascii\", 0, 4) !== \"RIFF\") return null;\n  if (buf.toString(\"ascii\", 8, 12) !== \"WEBP\") return null;\n\n  const chunk = buf.toString(\"ascii\", 12, 16);\n\n  // VP8X\n  if (chunk === \"VP8X\") {\n    const widthMinus1 = buf[24] | (buf[25] << 8) | (buf[26] << 16);\n    const heightMinus1 = buf[27] | (buf[28] << 8) | (buf[29] << 16);\n    return { width: widthMinus1 + 1, height: heightMinus1 + 1, format: \"webp\" };\n  }\n\n  // VP8L\n  if (chunk === \"VP8L\" && buf[20] === 0x2f) {\n    const b0 = buf[21];\n    const b1 = buf[22];\n    const b2 = buf[23];\n    const b3 = buf[24];\n\n    const width = 1 + (((b1 & 0x3f) << 8) | b0);\n    const height = 1 + (((b3 & 0x0f) << 10) | (b2 << 2) | ((b1 & 0xc0) >> 6));\n    return { width, height, format: \"webp\" };\n  }\n\n  return null;\n}\n\nfunction parseByHeader(buf) {\n  return parsePng(buf) || parseJpeg(buf) || parseGif(buf) || parseWebp(buf);\n}\n\nasync function getDimsFromBinary(itemIndex, key, imgObj) {\n  // 1) 优先读 metadata 里的宽高\n  const metaWidth = imgObj.width || imgObj.imageWidth || imgObj.metadata?.width || imgObj.meta?.width;\n  const metaHeight = imgObj.height || imgObj.imageHeight || imgObj.metadata?.height || imgObj.meta?.height;\n  if (metaWidth && metaHeight) {\n    return {\n      width: Number(metaWidth),\n      height: Number(metaHeight),\n      detectedFormat: (imgObj.mimeType || \"\").split(\"/\")[1] || null,\n      dimensionSource: \"metadata\",\n    };\n  }\n\n  // 2) 尝试 data(base64)\n  if (imgObj.data) {\n    try {\n      const buf = Buffer.from(imgObj.data, \"base64\");\n      const parsed = parseByHeader(buf);\n      if (parsed) {\n        return {\n          width: parsed.width,\n          height: parsed.height,\n          detectedFormat: parsed.format,\n          dimensionSource: \"data_base64\",\n        };\n      }\n    } catch (_) {}\n  }\n\n  // 3) 用 n8n helper 拿真实二进制 buffer（关键）\n  try {\n    const buf = await this.helpers.getBinaryDataBuffer(itemIndex, key);\n    const parsed = parseByHeader(buf);\n    if (parsed) {\n      return {\n        width: parsed.width,\n        height: parsed.height,\n        detectedFormat: parsed.format,\n        dimensionSource: \"binary_buffer\",\n      };\n    }\n  } catch (e) {\n    console.log(`读取二进制失败: item=${itemIndex}, key=${key}, err=${e.message}`);\n  }\n\n  return null;\n}\n\nasync function run() {\n  const itemIndex = 0; // 当前按单 item 处理\n  const binary = $input.item?.binary || {};\n  const keys = Object.keys(binary);\n\n  const hasCkimage = keys.some((k) => k.startsWith(\"ckimage\"));\n  const hasCpimage = keys.some((k) => k.startsWith(\"cpimage\"));\n\n  // 两个前缀必须同时存在\n  if (!hasCkimage || !hasCpimage) {\n    console.log(\"缺少 ckimage 或 cpimage 前缀的图片，不进行提取\");\n    return [\n      {\n        json: {\n          message: \"缺少 ckimage 或 cpimage 前缀的图片，不提取 binary\",\n          hasCkimage,\n          hasCpimage,\n          extracted: false,\n        },\n        binary: {},\n      },\n    ];\n  }\n\n  // 先 ckimage，再 cpimage\n  const orderedKeys = [\n    ...keys.filter((k) => k.startsWith(\"ckimage\")),\n    ...keys.filter((k) => k.startsWith(\"cpimage\")),\n  ];\n\n  const extractedBinary = {};\n  const imageInfos = [];\n\n  for (let i = 0; i < orderedKeys.length; i++) {\n    const oldKey = orderedKeys[i];\n    const outputKey = oldKey; // 保持原键名，不改成 1图/2图\n    const imgObj = { ...binary[oldKey] };\n\n    extractedBinary[outputKey] = imgObj;\n\n    const dims = await getDimsFromBinary.call(this, itemIndex, oldKey, imgObj);\n    const ratio = dims ? getClosestRatio(dims.width, dims.height) : null;\n\n    imageInfos.push({\n      outputKey: outputKey,\n      originalKey: oldKey,\n      fileName: imgObj.fileName || \"\",\n      mimeType: imgObj.mimeType || \"\",\n      width: dims ? dims.width : null,\n      height: dims ? dims.height : null,\n      pixelText: dims ? `${dims.width}x${dims.height}` : null,\n      detectedFormat: dims ? dims.detectedFormat : null,\n      dimensionSource: dims ? dims.dimensionSource : null,\n      closestRatio: ratio ? ratio.closestRatio : null,\n      actualRatio: ratio ? ratio.actualRatio : null,\n      ratioDiff: ratio ? ratio.ratioDiff : null,\n    });\n  }\n\n  console.log(`成功提取 ckimage 和 cpimage 图片，共 ${orderedKeys.length} 张`);\n\n  return [\n    {\n      json: {\n        message: \"成功提取 ckimage 和 cpimage 的图片，并完成像素与比例识别\",\n        ckimageCount: keys.filter((k) => k.startsWith(\"ckimage\")).length,\n        cpimageCount: keys.filter((k) => k.startsWith(\"cpimage\")).length,\n        extractedCount: orderedKeys.length,\n        extracted: true,\n        imageInfos,\n      },\n      binary: extractedBinary, // 这里仍是原始 ckimage/cpimage 键名\n    },\n  ];\n}\n\nreturn await run();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        112
+      ],
+      "id": "7893d8aa-5e61-48d9-8ef9-db071998628d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "imageToImage",
+        "model": "gemini-3-pro-image-preview",
+        "prompt": "={{ $json.inputData.output }}",
+        "referenceImages": "1图",
+        "aspectRatio": "={{ $('Code in JavaScript2').first().json.imageInfos[0].closestRatio }}",
+        "resolution": "2K",
+        "outputPropertyName": "1",
+        "options": {}
+      },
+      "type": "n8n-nodes-nano-banana.nanoBanana",
+      "typeVersion": 1,
+      "position": [
+        3376,
+        256
+      ],
+      "id": "639803b6-8a40-47cb-b509-568ee846bc18",
+      "name": "Nano Banana1",
+      "credentials": {
+        "nanoBananaApi": {
+          "id": "HzuEvKQzrccWbQ01",
+          "name": "Nano Banana account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a88463eb-7b2d-48ed-a679-4aaba78300aa",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -128,
+        112
+      ],
+      "id": "6be7fcb9-8804-493f-8904-0adbc124cf24",
+      "name": "Webhook1",
+      "webhookId": "a88463eb-7b2d-48ed-a679-4aaba78300aa"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "qwen3.5:35b",
+          "mode": "list",
+          "cachedResultName": "qwen3.5:35b"
+        },
+        "text": "=## 角色定义\n你是一个专业的电商视觉分析师和提示词工程师。你的任务是将用户提供的参考图，解构为“结构分析”和“可执行的生成提示词”。\n\n## 核心规则（最高优先级）\n1. **只提取场景与结构**：背景环境、光影氛围、人物姿态、构图比例、视觉重心。\n2. **严格剥离主体特征**：识别画面中的主体产品（即需要被替换的部分）。**绝对不要**描述该主体的颜色、材质、纹理或品牌特征。\n3. **主体占位**：在描述中，使用用户提供的 `[产品名称]` 作为占位符，并仅描述其位置和物理状态（如“被抱在怀里”、“放在桌面上”）。\n4. **禁止项**：严禁提取图中的文字、Logo、水印或特定的UI设计元素。\n\n## 执行步骤（按顺序执行）\n1. **场景深度分析**：识别背景的层次感（远景/中景/前景），确保生成具有真实摄影景深感（Depth of Field）。\n2. **构图与布局识别**：分析排版方式（居中/对称/三分法）、主体占比、留白区域。\n3. **光影与色调提取**：分析光源方向（侧光/背光）、光质（柔光/硬光）、色调（暖调/冷调）。\n4. **主体处理**：将原图产品抽象化，替换为 `[产品名称]`。\n5. **识别上传图片比例**：例如16：9\n\n### 第一部分：结构分析报告（不输出）\n- **构图布局**：[例如：中心构图，上下分层]\n- **视觉占比**：[例如：产品60%，环境40%]\n- **人物与动作**：[例如：女性侧身站立，双手怀抱主体]\n- **环境细节**：[例如：婴儿卧室]\n- **颜色风格**：[例如：浅绿色]\n- **光影氛围**：[例如：左侧柔和自然光，温馨家庭感]\n\n## 输出格式\n### AI生成提示词（供直接复制使用）\n**请将上述分析转化为一段中文提示词，格式如下：**\n(Photography of [{{ $json.body.name }}] [描述产品状态/位置]), [人物描述及动作], [详细的环境背景描述], [光影与氛围描述], [摄影参数如景深/镜头感], 8k, high quality, photorealistic, amazon e-commerce style --no text, logo, watermark, brand name.xxx比例：16:9\n\n---\n**用户输入图片ckimage和[产品名称：{{ $json.body.name }}]，开始执行。** ",
+        "binaryPropertyName": "ckimage",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        -176
+      ],
+      "id": "60b5a13c-ec4e-4bdb-9ad2-8319f7af5a7e",
+      "name": "Analyze image1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "sPNd1GjPjt9jPSEG",
+          "name": "Ollama account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Analyze image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items4": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nano Banana1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提取构图参考": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.2": {
+      "main": [
+        []
+      ]
+    },
+    "提取cpimage或者ckimage": {
+      "main": [
+        [
+          {
+            "node": "binary转换base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "binary转换base64": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "binary转换base64-",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "binary转换base64-": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "提取构图参考",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nano Banana1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2269f049-5d58-467c-a7d3-afee042cb1b6",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-30T02:44:12.056Z",
+      "createdAt": "2026-04-30T02:44:12.056Z",
+      "role": "workflow:owner",
+      "workflowId": "8FF5Bt7BtY_I8MCmyFQGG",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
