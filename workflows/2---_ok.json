@@ -1,0 +1,32 @@
+{
+  "updatedAt": "2026-05-14T06:52:54.419Z",
+  "createdAt": "2026-05-14T06:28:50.937Z",
+  "id": "Bqje_TJCKTkPbjz3Ctx_L",
+  "name": "袜子溶图智能体2---测试ok",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "8e4f7842-471e-49f8-8224-f062e48b5b2d",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-14T06:28:50.937Z",
+      "createdAt": "2026-05-14T06:28:50.937Z",
+      "role": "workflow:owner",
+      "workflowId": "Bqje_TJCKTkPbjz3Ctx_L",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
