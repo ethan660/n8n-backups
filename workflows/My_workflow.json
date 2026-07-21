@@ -1,0 +1,107 @@
+{
+  "updatedAt": "2026-01-28T06:49:06.590Z",
+  "createdAt": "2026-01-28T06:48:51.028Z",
+  "id": "ufUPsyg7pZLVSDJhbfnSy",
+  "name": "My workflow",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "33f68bf0-107b-4177-a29d-5c986d855efc",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://you-want-download.com/public/image.png",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "b0905d05-14bc-48f7-91fd-08f5faf63b27",
+      "name": "下载文件"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://you-want-upload.com/api/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "binary-data-name"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "aeb77a62-fcef-4fd5-b266-cda94e909e33",
+      "name": "上传文件"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "下载文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载文件": {
+      "main": [
+        [
+          {
+            "node": "上传文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "56bea3ff-4c59-4014-ac0a-e7f628886182",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-28T06:48:51.028Z",
+      "createdAt": "2026-01-28T06:48:51.028Z",
+      "role": "workflow:owner",
+      "workflowId": "ufUPsyg7pZLVSDJhbfnSy",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
