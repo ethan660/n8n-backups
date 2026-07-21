@@ -1,0 +1,864 @@
+{
+  "updatedAt": "2026-04-08T06:17:10.861Z",
+  "createdAt": "2026-03-12T02:50:48.749Z",
+  "id": "dM4kV8Tx2GJxB02O6pY_5",
+  "name": "电商aigent",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        7760,
+        3376
+      ],
+      "id": "cc6be6a5-a6bf-4354-a3b3-39f46a20ae01",
+      "name": "Google Gemini Chat Model3",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output.body[\"Product Information\"] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=角色\n你是一键生成Amazon A+详情图的专业工作流助手，专注为用户提供符合Amazon平台标准的商品详情图设计方案，通过结构化分析产品信息，输出精准适配的详情图工作流，覆盖核心信息提炼、套图规格、风格字体、配色逻辑及设计规范，助力用户高效完成Amazon A+详情页的视觉转化。\n核心技能\n技能1: 信息采集与分析\n• 需用户提供信息: 产品名称、品类（如美妆护肤/母婴/运动户外/复古文艺等）、产品语言版本、品牌定位、核心卖点（如成分/功能/参数）、目标人群画像、额外视觉参考（如有）；\n• 基础分析: 自动识别产品类目，判断核心风格方向（参考预设品类模板），初步锁定适配的字体、配色体系。\n技能2: 核心信息提炼\n• 输出内容: 明确以下信息用于生成详情图框架:\n\n◦ 产品类目（如美妆/母婴等）及风格关键词（如 \"精致柔美\" \"圆润无攻击性\" 等，按品类匹配）;\n◦ 核心卖点（按重要性排序，含关键参数/差异化优势）;\n◦ 目标人群（如 \"25-35岁女性\" \"宝妈群体\" 等）;\n◦ 视觉规范基础框架（含尺寸、布局逻辑、信息层级）。\n技能3: 套图规格规范\n• 基础尺寸要求:\n\n◦ 主Banner: 1920×1080px（宽×高，适配Amazon A+首屏视觉）;\n◦ 模块图: 1200×600px或1200×800px（按内容适配，如参数展示、步骤图等）;\n◦ 辅助图: 600×600px（产品细节、场景图等，支持灵活调整）;\n• 布局逻辑: 明确主Banner与模块图的上下/左右排列关系，确保信息流畅、转化重点突出。\n技能4: 风格与字体适配\n• 基础字体体系:\n\n◦ 通用首选: Inter（正文）、SF Pro（可选，优先适配Mac端视觉）、Montserrat（标题）;\n◦ 品类专项字体:\n\n▪ 美妆护肤（口红/精华）: 纤细清晰型→DM Sans/Poppins（低字重），标题点缀→Didot（少量）;\n▪ 母婴/儿童（玩具/辅食）: 圆润无衬线→Nunito/Quicksand，标题→Baloo 2/Poppins（低字重）;\n▪ 运动户外（露营/跑鞋）: 粗体无衬线→Bebas Neue/Oswald，标题→Inter Bold/Anton;\n▪ 复古/文艺（复古音箱/手作）: 简约复古→Source Serif 4/Libre Franklin，排版→Work Sans（做旧）。\n技能5: 配色与转化重点\n• 基础配色体系:\n\n◦ 基础色: 黑/白/深灰（通用背景/边框），品牌色（科技蓝/金属银/莫兰迪色系等，需用户提供或默认科技蓝）;\n◦ 点缀色: 荧光绿/电光蓝（少量）、珠光金/玫瑰金（美妆）、浅粉/浅蓝（母婴）、橙红/荧光绿（运动户外）;\n• 品类转化重点:\n\n◦ 美妆: 强调效果/成分/安全感（避免强手写体）;\n◦ 母婴: 无攻击性/安全感（图文密度适中）;\n◦ 运动户外: 耐用性/场景感（强调参数/场景化）;\n◦ 复古: 情绪感/年代感（留白与节奏优先）。\n技能6: 设计红线规避\n• 禁止项: 使用过细字体（如<10px）、Comic Sans/Impact（禁用字体）、高饱和撞色（超过3种基础色+2种点缀色总占比）、字体种类>2种（单图/模块内）、信息密度过高（参数区块对齐但留足空白）。\n输出\n1. 【产品核心信息】\n◦ 产品类目: 美妆护肤\n◦ 核心风格: 柔美、精致（纤细清晰但不幼态）\n◦ 目标人群: 25-35岁女性（关注成分安全/色彩多样性）\n◦ 核心卖点: 天然成分（95%天然植萃）、3色可选（#01#02#03）\n2. 【Amazon A+套图规格清单】\n◦ 主Banner（1920×1080px）: 顶部展示口红特写，底部标题 \"Natural Lip Color 3 Colors\" +关键卖点 \"95% Natural Extracts\"\n◦ 模块图1（1200×600px）: 成分参数表（天然植萃成分占比）\n◦ 模块图2（1200×600px）: 色号试色对比+场景（日常/约会使用）\n3. 【风格与字体方案】\n◦ 主字体: DM Sans（正文，16px）\n◦ 标题字体: Poppins（低字重，20px）\n◦ 强调字体: Didot（少量标题点缀，24px）\n4. 【配色方案】\n◦ 基础色: 黑/白/深灰\n◦ 品牌色: 裸色（主色） + 玫瑰金（点缀色，3%）\n5. Amazon A+ 详情图核心逻辑（根据6张要求的海报数量）\n限制\n• 仅基于用户提供的产品信息（名称/类目/卖点等）及内部标准生成方案，无需调用外部搜索;\n• 严格遵循Amazon A+详情图视觉规范，输出内容可直接用于设计工具（如Canva/PS）执行;\n• 不生成图片，仅输出可落地的设计参数与逻辑框架。\n【设计红线自查】\n规避: Comic Sans/过细字体（10px以下）/全图高饱和撞色\n禁止问候语，客套",
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        7552,
+        3120
+      ],
+      "id": "fd884091-7d0a-4d36-bd5d-4eb16e0fa15d",
+      "name": "AI Agent4",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash-lite-001",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash-lite-001"
+        },
+        "messages": {
+          "values": [
+            {}
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGeminiTool",
+      "typeVersion": 1.1,
+      "position": [
+        7040,
+        3440
+      ],
+      "id": "fa155b19-9def-4b90-9dde-96133155eb9a",
+      "name": "Message a model in Google Gemini1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.inputData.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "角色\nAmazon A+ 商品详情图专家\n基础（Standard）模块：\n1. 主图 - 点击率（CTR） 必须纯白底。虽然不能加文字，但可通过立体摆放、带包装（更精美）或阴影渲染来增加画面占幅（占比 85%+），让产品在搜索页看起来“更大、更值”。\n2. 卖点图/爆品图 - 激发兴趣 不要只放多图。建议将“多角度”与“核心卖点”结合。例如：展示侧面的同时，用文字标注该角度能看到的“超薄厚度”或“特殊接口”。纯图的“背面图”无信息价值，建议往后放。\n3. 场景图（lifestyle） - 代入感 拒绝假合成。2025年买家对 PS 痕迹明显的“悬浮产品”很敏感。必须使用真实拍摄或高质量渲染，展示真人使用状态（如手持、佩戴），让买家心想“我用也是这样”。\n4. 核心细节图 - 质感/专业度 微距特写。针对材质（如真皮纹理）、工艺（如接缝处）、操作件（按键手感）。这是消除溢价的场景。\n5. 参数/对比图 - 消除疑虑 参照物对比。不要只写“15cm”，要放一个手机、硬币或手掌在旁边对比。解决“到手发现太小”的差评重灾区。\n6. 竞品对比图 - 凸显优势 慎用“吊打”词汇。可以用 ✅和 ❌ 对比（如“我们的加厚海绵 vs 其他的‘普通海绵’”），但绝对不能出现竞品的品牌 LOGO 或极具明显的识别特征，否则会被投诉侵权。\n7. 品牌/质量背书书（无敏感词版）。\n补充图组：第 8、第 9 张（移动端常被折叠）\n1. 多角度补充：如果产品结构复杂（如复杂的健身器材），前几张没展示全的背面、底部、包装，补全。\n2. 包装/全家福：展示精美的礼盒包装，或者把所有配件摊开拍一张“全家福”，告知买家“你将收到这些东西”，防止因“少配件”产生的纠纷。\n要求\n根据产品核心信息 + 字体结构 + 套图风格（info）；\n还有生成数量 {number} 生成一套 Amazon A+ 电商详情图；\n限制\n1. 主图必须为纯白色：主图背景一定要纯白色，亚马逊搜索和产品详情界面也需是纯白的，其 RGB 值是 255/255/255（小部分 home 家居类用品主图不强制用纯白背景，如床上四件套等可用纯背景的背景图）。\n2. 模特要求：若有模特，模特必须是站立的，且必须为真人模特，不能是模型模特，模特必须是正面站立的，不能是侧面、背面、等；\n特殊产品主图：\n3. 尺寸要求：官方规范 + 行业最优实践；\nAmazon A+ 套图官方要求尺寸：主 Banner 建议 1920×1080px，模块图 1200×600/1200×800px（高清无拉伸），每一个配图都要有对应的字体说明（这个有极强密码）。\n4. 为了保持 A+ 页面视觉统一，在内部视觉规范中对配图字体（如字体类型、字号、颜色）的标注，属于品牌视觉管理的一部分，能提升页面的专业度和一致性。\n输出：可直接复制的提示词，每条都包含「比例 + 产品 + 卖点 + 场景 + 风格 + 文字 + 光影 + 构图 + 字体说明」，精准对应需求。\n输出格式为：1图:xxxx,2图:xxxx,....\n禁止问候语，客套",
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": true,
+          "batching": {}
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        8368,
+        3104
+      ],
+      "id": "0075b2ae-f3be-4418-badc-186c95399f24",
+      "name": "AI Agent5",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        8704,
+        3328
+      ],
+      "id": "6e4e95cb-1236-43cd-ab6e-0250de65bafd",
+      "name": "Google Gemini Chat Model4",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen/Qwen3-VL-32B-Instruct",
+          "mode": "list",
+          "cachedResultName": "Qwen/Qwen3-VL-32B-Instruct"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        8304,
+        3328
+      ],
+      "id": "4894d837-c2fc-483d-a562-85fe206b632a",
+      "name": "OpenAI Chat Model3",
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "4h3AA9UIed1lWM83",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen/Qwen3-VL-32B-Instruct",
+          "mode": "list",
+          "cachedResultName": "Qwen/Qwen3-VL-32B-Instruct"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        7472,
+        3360
+      ],
+      "id": "e06fbe50-9160-4e3f-a812-5bd9a26d9cd7",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "4h3AA9UIed1lWM83",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst outputs = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin);\n\n  if (!keys.length) {\n    outputs.push({ json: { key: '', fileName: '', mimeType: '', url: '' } });\n    continue;\n  }\n\n  for (const key of keys) {\n    const meta = bin[key] || {};\n    let url = '';\n    try {\n      const buf = await this.helpers.getBinaryDataBuffer(i, key);\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const base64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n      url = base64 ? `data:${mime};base64,${base64}` : '';\n    } catch (_) {\n      const mime = meta.mimeType || meta.mimetype || 'application/octet-stream';\n      const data = meta.data;\n      if (typeof data === 'string' && data.length) url = `data:${mime};base64,${data}`;\n    }\n\n    outputs.push({\n      json: {\n        key,\n        fileName: meta.fileName || meta.filename || key,\n        mimeType: meta.mimeType || meta.mimetype || '',\n        url\n      }\n    });\n  }\n}\n\nreturn outputs.length ? outputs : [{ json: { key: '', fileName: '', mimeType: '', url: '' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        10480,
+        2928
+      ],
+      "id": "b79d72c5-82e1-4b41-a3bb-7cb8943cc612",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        9008,
+        3360
+      ],
+      "id": "651ecbbf-8576-409e-a036-49e82dc7a68e",
+      "name": "Google Gemini Chat Model5",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "详情图agent",
+        "formDescription": "详情图agent",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "name"
+            },
+            {
+              "fieldLabel": "image",
+              "fieldType": "file"
+            },
+            {
+              "fieldLabel": "language",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "英文"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "number"
+            },
+            {
+              "fieldLabel": "Product Information"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        5808,
+        3376
+      ],
+      "id": "b51a29c3-cab5-43fc-a5a3-7f74564fa061",
+      "name": "On form submission",
+      "webhookId": "ee3b82bb-5f34-47d7-9566-f6a8d52cefbf"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        10960,
+        2864
+      ],
+      "id": "63e55699-ab2d-47a9-9311-6abde8dee346",
+      "name": "Form",
+      "webhookId": "f2d08d8b-7be8-4825-8567-18ca6cbcf1af"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能1：提取当前输入的文本描述（AI Agent 的 output）和 binary 图像\n// 功能2：从 Code in JavaScript2 节点提取 binary 图像并合并\n// 返回：包含描述 + 合并后的 binary 图像（当前输入 + JavaScript2）\n// ================================================\n\n// 调试信息：先打印当前输入的 binary 键名\nconsole.log('Binary keys in current item:', Object.keys($input.item.binary || {}));\nconsole.log('Binary count:', Object.keys($input.item.binary || {}).length);\n\n// 1. 提取文本描述（从 AI Agent 的 output 字段）\nconst raw = $input.item.json.output || '';\n\nlet text = raw\n  .replace(/^\\s*<\\|\\s*begin_of_box\\s*\\|>\\s*/i, '')\n  .replace(/\\s*<\\|\\s*end_of_box\\s*\\|>\\s*$/i, '')\n  .trim();\n\nconst pattern = /(\\d+图\\s*:\\s*)([\\s\\S]*?)(?=\\d+图\\s*:|$)/g;\nconst descriptions = {};\nlet match;\n\nwhile ((match = pattern.exec(text)) !== null) {\n  const key = match[1].trim();          // 如 \"1图:\"\n  let value = match[2].trim();\n  value = value.replace(/\\n+$/, '');    // 去尾部多余换行\n  if (value) {\n    descriptions[key] = value;\n  }\n}\n\n// 2. 提取当前输入的所有 binary（使用 $input.item.binary）\nconst inputBinary = $input.item.binary || {};\nconst images = {};\nlet index = 0;\n\nfor (const originalKey in inputBinary) {\n  if (inputBinary.hasOwnProperty(originalKey)) {\n    const newKey = `${index + 1}图`;   // 重命名为 \"1图\"、\"2图\"...\n    images[newKey] = { ...inputBinary[originalKey] };\n    index++;\n  }\n}\n\n// 3. 从 Code in JavaScript2 节点提取 binary 图像\nlet js2ImageCount = 0;\ntry {\n  const js2Items = $('Code in JavaScript2').all();\n  console.log('Code in JavaScript2 items count:', js2Items.length);\n  \n  if (js2Items && js2Items.length > 0) {\n    js2Items.forEach((item, itemIdx) => {\n      const js2Binary = item.binary || {};\n      console.log(`JS2 item ${itemIdx} binary keys:`, Object.keys(js2Binary));\n      \n      for (const originalKey in js2Binary) {\n        if (js2Binary.hasOwnProperty(originalKey) && originalKey.startsWith('image')) {\n          // 继续编号：如果当前输入有2张图，JS2的图从 \"3图\" 开始\n          const newKey = `${index + 1}图`;\n          images[newKey] = { ...js2Binary[originalKey] };\n          \n          // 可选：添加来源标记\n          images[newKey].sourceNode = 'Code in JavaScript2';\n          images[newKey].sourceField = originalKey;\n          images[newKey].sourceItemIndex = itemIdx;\n          \n          index++;\n          js2ImageCount++;\n        }\n      }\n    });\n  }\n} catch (err) {\n  console.log('获取 Code in JavaScript2 失败:', err.message);\n}\n\n// 4. 输出一个 item，包含描述 + 合并后的 binary\nreturn [{\n  json: {\n    descriptions: descriptions,          // { \"1图\": \"...描述...\", \"2图\": \"...\" }\n    imageCount: index,                   // 总图像数（当前输入 + JS2）\n    inputImageCount: Object.keys(inputBinary).length,  // 当前输入的图像数\n    js2ImageCount: js2ImageCount,        // JS2 节点的图像数\n    originalBinaryKeys: Object.keys(inputBinary),      // 调试用\n    js2Connected: js2ImageCount > 0      // 是否成功获取 JS2 图像\n  },\n  binary: images                         // 合并后的 binary（\"1图\", \"2图\", \"3图\"...）\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8992,
+        3072
+      ],
+      "id": "3157411e-e3a6-4737-badd-5e505e07f3ae",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        9680,
+        3072
+      ],
+      "id": "438adefa-4054-4706-b07c-509c87f05bfb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能：将 descriptions（1图、2图...）与 binary 图像一一对应，每个图形成一个 item\n// 输入：上一个节点的 descriptions 和 binary 图像\n// 输出：多个 item，每个 item 包含对应图的描述和 binary 数据\n// ================================================\n\n// 调试信息\nconsole.log('Input binary keys:', Object.keys($input.item.binary || {}));\nconsole.log('Input json:', JSON.stringify($input.item.json, null, 2));\n\nconst inputBinary = $input.item.binary || {};\nconst inputJson = $input.item.json || {};\n\n// 获取 descriptions 对象（格式：{ \"1图:\": \"描述1\", \"2图:\": \"描述2\", ... }）\nconst descriptions = inputJson.descriptions || {};\n\n// 获取所有 binary 图像，按名称排序（image0, image1, image2...）\nconst binaryKeys = Object.keys(inputBinary)\n  .filter(key => key.startsWith('image'))\n  .sort((a, b) => {\n    // 按数字排序：image0, image1, image2...\n    const numA = parseInt(a.replace('image', '')) || 0;\n    const numB = parseInt(b.replace('image', '')) || 0;\n    return numA - numB;\n  });\n\nconsole.log('Sorted binary keys:', binaryKeys);\nconsole.log('Description keys:', Object.keys(descriptions));\n\n// 生成对应数量的 items\nconst results = [];\n\n// 遍历所有图像，为每个图像创建一个 item\nbinaryKeys.forEach((binaryKey, index) => {\n  // 计算对应的 description key（\"1图:\", \"2图:\", ...）\n  const descKey = `${index + 1}图:`;\n  const description = descriptions[descKey] || descriptions[`${index + 1}图`] || '';\n  \n  // 构建单个 item\n  const item = {\n    json: {\n      // 图的编号和信息\n      imageNumber: index + 1,\n      imageKey: binaryKey,\n      description: description,\n      descriptionKey: descKey,\n      \n      // 图像元数据\n      fileName: inputBinary[binaryKey].fileName || '',\n      mimeType: inputBinary[binaryKey].mimeType || '',\n      fileExtension: inputBinary[binaryKey].fileExtension || '',\n      fileSize: inputBinary[binaryKey].fileSize || '',\n      \n      // 原始完整数据（调试用，可删除）\n      originalBinary: inputBinary[binaryKey]\n    },\n    \n    // binary 数据：使用 \"image\" 作为标准键名（或保持原样）\n    binary: {\n      image: inputBinary[binaryKey]  // 统一用 \"image\" 键，方便后续节点使用\n      // 或者保持原键名：[binaryKey]: inputBinary[binaryKey]\n    }\n  };\n  \n  results.push(item);\n});\n\nconsole.log(`Created ${results.length} items`);\n\n// 如果没有图像，返回空提示\nif (results.length === 0) {\n  return [{\n    json: {\n      error: '未找到 binary 图像数据',\n      availableKeys: Object.keys(inputBinary),\n      descriptions: descriptions\n    }\n  }];\n}\n\n// 返回多个 item 的数组\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9328,
+        3072
+      ],
+      "id": "c05f0918-84e0-4f0f-af2a-5b7bebc5b777",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 输入：假设 AI Agent 输出在 $json.output 字段\nconst raw = $input.first().json.output || '';\n\n// 清理首尾标记（<|begin_of_box|> 和 <|end_of_box|>）\nlet text = raw\n  .replace(/^\\s*<\\|\\s*begin_of_box\\s*\\|>\\s*/i, '')\n  .replace(/\\s*<\\|\\s*end_of_box\\s*\\|>\\s*$/i, '')\n  .trim();\n\n// 用正则匹配每个 “数字图:” 及其内容，直到下一个 “数字图:” 或结束\nconst pattern = /(\\d+图\\s*:\\s*)([\\s\\S]*?)(?=\\d+图\\s*:|$)/g;\n\nconst result = {};\nlet match;\n\nwhile ((match = pattern.exec(text)) !== null) {\n  const key = match[1].trim();          // 如 \"1图:\"\n  let value = match[2].trim();          // 后面的描述内容\n  // 去掉可能的尾部多余换行\n  value = value.replace(/\\n+$/, '');\n  \n  if (value) {\n    result[key] = value;\n  }\n}\n\n// 返回单个 item，包含 { \"1图\": \"...\", \"2图\": \"...\", ... }\nreturn [{ json: result }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9216,
+        2816
+      ],
+      "id": "40f85bd3-7fe5-45c0-8227-644062003eaa",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "151f8015-d62c-45c2-8017-230abaafdec2",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        5840,
+        2992
+      ],
+      "id": "11c3fdc4-53cc-4fa0-9710-45425689dac1",
+      "name": "Webhook",
+      "webhookId": "151f8015-d62c-45c2-8017-230abaafdec2"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        6656,
+        3152
+      ],
+      "id": "fc5bc23c-032f-494c-97be-dca76bac440d",
+      "name": "Edit Image"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        6416,
+        3152
+      ],
+      "id": "4a1b642d-33fa-4403-9d0b-876391fa0631",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "={{ Object.keys($binary)[0] }}",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        6848,
+        3152
+      ],
+      "id": "230098b8-4485-42cd-86dd-31cec84794a5",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6208,
+        3152
+      ],
+      "id": "ed164590-ed36-403c-aede-d4efe8fe66eb",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码（直接复制粘贴即可执行）\n// 功能1：遍历「Code in JavaScript8」节点的所有输出 items，提取 .json.output\n// 功能2：从当前节点的输入（Aggregate 节点）提取二进制图像数据\n// 返回 n8n 标准格式：对象数组（支持多 item，包含 binary 数据）\n// ================================================\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst getOutputFromNode = () => {\n  try {\n    // 获取当前节点的输入（Aggregate 节点输出）- 包含 binary 数据\n    const inputItems = $input.all();\n    const firstInputItem = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputBinary = firstInputItem.binary || {};\n    \n    // 提取 Aggregate 的图像元数据（用于放入 json）\n    const aggregateImageMeta = [];\n    const binaryKeys = Object.keys(inputBinary).filter(key => key.startsWith('image'));\n    \n    binaryKeys.forEach(key => {\n      const img = inputBinary[key];\n      aggregateImageMeta.push({\n        fieldName: key,\n        fileName: img.fileName || '',\n        mimeType: img.mimeType || '',\n        fileExtension: img.fileExtension || '',\n        fileSize: img.fileSize || ''\n      });\n    });\n\n    // 遍历上上上游节点「Code in JavaScript8」的所有输出 items\n    const nodeItems = $('Code in JavaScript8').all();\n\n    if (!nodeItems || nodeItems.length === 0) {\n      // 即使没有 Code in JavaScript8 数据，也返回 Aggregate 的图像\n      return [{\n        json: {\n          output: '',\n          aggregateImages: aggregateImageMeta,\n          note: 'Code in JavaScript8 无输出数据'\n        },\n        binary: inputBinary // 关键：保留 binary 数据\n      }];\n    }\n\n    // 为每个 item 提取 output，并附加 Aggregate 的图像元数据和 binary 数据\n    return nodeItems.map((item, index) => {\n      const rawOutput = item.json?.output ?? item.json;\n\n      return {\n        json: {\n          output: typeof rawOutput === 'string' \n            ? toStr(rawOutput) \n            : rawOutput,\n          \n          // Aggregate 图像元数据\n          aggregateImages: aggregateImageMeta,\n          aggregateImageCount: aggregateImageMeta.length,\n          \n          // 调试字段（确认后可删除）\n          originalItemJson: item.json,\n          sourceNode: 'Code in JavaScript8',\n          itemIndex: index\n        },\n        \n        // 关键：必须显式包含 binary 字段，n8n 才能在 Binary 标签页显示图像\n        binary: inputBinary\n      };\n    });\n  } catch (err) {\n    console.log('执行失败:', err.message);\n    return [{\n      json: {\n        output: '',\n        aggregateImages: [],\n        error: '执行错误',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回 n8n 标准格式\nreturn getOutputFromNode();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7296,
+        3152
+      ],
+      "id": "720c40e6-9b85-4ee8-b7fa-fb13abedd292",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ================================================\n// n8n Code 节点专用代码\n// 功能1：获取当前节点的输入数据（Aggregate 节点）\n// 功能2：主动获取 Code in JavaScript2 节点的 binary 图像数据\n// 返回：合并后的数据，包含 input 数据和 JavaScript2 的图像\n// ================================================\n\nconst mergeInputAndImages = () => {\n  try {\n    // 1. 获取当前节点的输入（Aggregate 节点数据）\n    const inputItems = $input.all();\n    const firstInput = inputItems && inputItems.length > 0 ? inputItems[0] : {};\n    const inputJson = firstInput.json || {};\n    const inputBinary = firstInput.binary || {};\n\n    // 2. 主动获取 Code in JavaScript2 节点的输出（包含 binary 图像）\n    let js2Images = [];\n    let js2Binary = {};\n    \n    try {\n      const js2Items = $('Code in JavaScript2').all();\n      \n      if (js2Items && js2Items.length > 0) {\n        // 遍历所有 items，收集 binary 图像\n        js2Items.forEach((item, idx) => {\n          const itemBinary = item.binary || {};\n          \n          // 提取所有 imageX 字段\n          Object.keys(itemBinary).forEach(key => {\n            if (key.startsWith('image') && itemBinary[key]) {\n              const img = itemBinary[key];\n              js2Images.push({\n                fieldName: key,\n                fileName: img.fileName || '',\n                mimeType: img.mimeType || '',\n                fileExtension: img.fileExtension || '',\n                fileSize: img.fileSize || '',\n                sourceItemIndex: idx\n              });\n              \n              // 收集 binary 数据（避免字段名冲突，加上前缀）\n              js2Binary[`js2_${key}_${idx}`] = itemBinary[key];\n            }\n          });\n        });\n      }\n    } catch (js2Err) {\n      console.log('获取 Code in JavaScript2 失败:', js2Err.message);\n    }\n\n    // 3. 返回合并后的数据\n    return [{\n      json: {\n        // 当前输入的 JSON 数据\n        inputData: inputJson,\n        \n        // Code in JavaScript2 的图像元数据\n        js2Images: js2Images,\n        js2ImageCount: js2Images.length,\n        \n        // 输入的 Aggregate 图像元数据\n        aggregateImages: Object.keys(inputBinary).map(key => ({\n          fieldName: key,\n          fileName: inputBinary[key]?.fileName || '',\n          mimeType: inputBinary[key]?.mimeType || ''\n        })),\n        \n        // 调试信息\n        inputItemCount: inputItems.length,\n        source: 'merged_input_and_js2_images'\n      },\n      \n      // 合并 binary 数据：输入的 + JavaScript2 的\n      binary: {\n        ...inputBinary,    // Aggregate 的图像\n        ...js2Binary       // JavaScript2 的图像（带前缀避免冲突）\n      }\n    }];\n    \n  } catch (err) {\n    console.log('合并数据失败:', err.message);\n    return [{\n      json: {\n        error: '执行失败',\n        errorDetail: err.message\n      }\n    }];\n  }\n};\n\n// 执行并返回\nreturn mergeInputAndImages();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8000,
+        3104
+      ],
+      "id": "e0769ecc-dd71-49e5-a1f4-535081b9f605",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-image",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-image (Nano Banana)"
+        },
+        "prompt": "={{ $json.descriptions['1图:'] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        10112,
+        3184
+      ],
+      "id": "c854ca7e-2154-48fe-9b7c-4a422d772510",
+      "name": "Generate an image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "iLkme2aGuEdmYJU6",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "all_images",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        10096,
+        2944
+      ],
+      "id": "e8fdfe2e-5563-46f4-ab7e-220601be4edc",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"images\": {{ JSON.stringify($input.all().map(item => item.json)) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        10704,
+        2928
+      ],
+      "id": "c290ceb9-5f95-482e-97e5-6b99afb7144d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f4fcc18-251f-4642-9bc7-3ada98180fc7",
+              "name": "body[\"Product Information\"]",
+              "value": "={{ $('Code in JavaScript8').item.json.body[\"Product Information\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        7280,
+        2864
+      ],
+      "id": "48f9d0a7-4431-4656-8f87-f286ed2f1e36",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3230800a-d316-42c7-bcfe-2cc817dd291f",
+              "name": "body['Product Information']",
+              "value": "={{ $json.body['Product Information'] }}",
+              "type": "string"
+            },
+            {
+              "id": "f1b77f5a-8750-4d2e-a1bb-689c52cffdea",
+              "name": "body.number",
+              "value": "={{ $json.body.number }}",
+              "type": "string"
+            },
+            {
+              "id": "f25de0da-e5d4-4380-8337-6c4940138e69",
+              "name": "body.name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6048,
+        2992
+      ],
+      "id": "20653c41-4242-48a4-8f46-26be3a626de8",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate an image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate an image": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "host": "192.168.33.61:5678",
+            "accept-encoding": "gzip, deflate, br",
+            "connection": "keep-alive",
+            "content-type": "multipart/form-data; boundary=--------------------------544155339335816890816070",
+            "content-length": "1400399"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "name": "黑色金属墙面置物架收纳架",
+            "number": "6",
+            "Product Information": "这是一款防锈快干型黑色金属墙面置物架收纳架，主打智能收纳解决方案，具备四大核心卖点：一是采用耐用防锈金属材质，搭配快速排水设计，适用于潮湿环境；二是承重能力强，最大可承重22磅（10公斤），并采用工业级强力胶粘技术，粘贴牢固不脱落；三是安装便捷，支持胶粘或螺丝两种方式，无需打孔、不损伤墙面，四步操作（清洁→贴胶→压紧→24小时固化）即可完成；四是实用性强，配备4个额外挂钩，可挂毛巾、海绵、沐浴球等，且适配多种平整墙面材质，包括瓷砖、大理石、不锈钢与光滑木板。产品提供三款规格：小型肥皂架（1.34″×4.17″×5.83″）、中型淋浴置物架（2.36″×5.04″×12″）和大型淋浴置物架（2.28″×5.83″×12.91″），套装包含2个肥皂架、2个淋浴置物架、4条胶粘条、2套螺丝安装件及1份说明书。应用场景覆盖现代浴室、马桶上方收纳、当代厨房及厨房香料站，通过真实场景展示突出其空间优化与生活品质提升价值，整体定位为高性价比、高实用性、高兼容性的家居智能收纳工具。"
+          },
+          "webhookUrl": "http://localhost:5678/webhook-test/151f8015-d62c-45c2-8017-230abaafdec2",
+          "executionMode": "test"
+        },
+        "binary": {
+          "image0": {
+            "mimeType": "image/png",
+            "fileType": "image",
+            "fileExtension": "png",
+            "data": "filesystem-v2",
+            "fileName": "page3-specifications.png",
+            "id": "filesystem-v2:workflows/dM4kV8Tx2GJxB02O6pY_5/executions/temp/binary_data/0ef52b8a-dba8-47b4-9a65-31f6795da7f9",
+            "fileSize": "296 kB",
+            "bytes": 296332
+          },
+          "image1": {
+            "mimeType": "image/png",
+            "fileType": "image",
+            "fileExtension": "png",
+            "data": "filesystem-v2",
+            "fileName": "page5-surfaces.png",
+            "id": "filesystem-v2:workflows/dM4kV8Tx2GJxB02O6pY_5/executions/temp/binary_data/bc56e6c6-f973-4756-9c8e-debc578d22ad",
+            "fileSize": "398 kB",
+            "bytes": 398365
+          },
+          "image2": {
+            "mimeType": "image/png",
+            "fileType": "image",
+            "fileExtension": "png",
+            "data": "filesystem-v2",
+            "fileName": "page4-installation-strength.png",
+            "id": "filesystem-v2:workflows/dM4kV8Tx2GJxB02O6pY_5/executions/temp/binary_data/97bb11e7-11d8-43b1-81df-f79995871713",
+            "fileSize": "399 kB",
+            "bytes": 398782
+          },
+          "image3": {
+            "mimeType": "image/png",
+            "fileType": "image",
+            "fileExtension": "png",
+            "data": "filesystem-v2",
+            "fileName": "page2-product-details.png",
+            "id": "filesystem-v2:workflows/dM4kV8Tx2GJxB02O6pY_5/executions/temp/binary_data/f65435a9-8941-41a4-9ebb-55654f6af71f",
+            "fileSize": "305 kB",
+            "bytes": 304618
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "76b74388-6144-425b-9784-2ab32514754a",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-12T02:50:48.749Z",
+      "createdAt": "2026-03-12T02:50:48.749Z",
+      "role": "workflow:owner",
+      "workflowId": "dM4kV8Tx2GJxB02O6pY_5",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
