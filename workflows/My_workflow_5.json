@@ -1,0 +1,68 @@
+{
+  "updatedAt": "2026-05-25T09:09:48.576Z",
+  "createdAt": "2026-05-25T08:53:38.516Z",
+  "id": "pEXDmy43MdCVqh76",
+  "name": "My workflow 5",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "76b4cfcc-08d0-4dee-ba46-7a2272f4e5e4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\nconst path = require('path');\n\nconst now = new Date();\n\nconst yyyy = String(now.getFullYear());\nconst mm = String(now.getMonth() + 1).padStart(2, '0');\nconst dd = String(now.getDate()).padStart(2, '0');\n\nconst target_dir = path.join(\n  '/home/node/.n8n/AI-WEB/',\n  yyyy,\n  mm,\n  '99',\n  '0000090909090'\n);\n\nlet created = false;\n\nif (!fs.existsSync(target_dir)) {\n  fs.mkdirSync(target_dir, { recursive: true });\n  created = true;\n}\n\nreturn [\n  {\n    json: {\n      target_dir,\n      created,\n      year: yyyy,\n      month: mm,\n      day: dd,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "296853a4-c54b-46f9-a5f9-2dbd9f887770",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "54e68dba-13fb-4162-8da8-0e762b049650",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-25T08:53:38.516Z",
+      "createdAt": "2026-05-25T08:53:38.516Z",
+      "role": "workflow:owner",
+      "workflowId": "pEXDmy43MdCVqh76",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
