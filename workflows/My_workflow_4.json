@@ -1,0 +1,95 @@
+{
+  "updatedAt": "2026-05-21T07:16:54.749Z",
+  "createdAt": "2026-05-21T06:39:41.633Z",
+  "id": "fOMqpNzoZT8yrFCn",
+  "name": "My workflow 4",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "22990995-af27-416e-9fd3-aee9cce8b249",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/home/node/.n8n/AI-WEB/rjd_temp/n8n.png",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "a890ff4a-fdd4-4bc6-aab7-948582512eda",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "url": "https://3.bp.blogspot.com/-nguQY0VOtUg/UjwwEJXPxKI/AAAAAAAACkM/RbP6dQ5kJTQ/s640/Thailand_boat_2013.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c7ca4147-8b87-47f6-9b51-c481df3564a3",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "7e9542c9-aa8e-47e1-847b-f62087a6ed10",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-05-21T06:39:41.633Z",
+      "createdAt": "2026-05-21T06:39:41.633Z",
+      "role": "workflow:owner",
+      "workflowId": "fOMqpNzoZT8yrFCn",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
