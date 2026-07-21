@@ -1,0 +1,107 @@
+{
+  "updatedAt": "2026-01-28T07:29:44.504Z",
+  "createdAt": "2026-01-28T07:28:59.483Z",
+  "id": "8UBvWFUpsYcBYjA4A-JRS",
+  "name": "My workflow 3",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "test",
+        "responseMode": "lastNode",
+        "responseData": "firstEntryBinary",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        32,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "d3ea80a8-1716-4846-9fbf-7aa94a940a47",
+      "webhookId": "39d94e50-f2cf-43a4-9eb2-03694a103e0f"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "text": "=They found the killer it was {{$node[\"Webhook\"].data[\"query\"][\"name\"]}}!",
+        "fontSize": "=25",
+        "positionX": 150,
+        "positionY": 180,
+        "lineLength": 18,
+        "options": {}
+      },
+      "name": "Edit Image",
+      "type": "n8n-nodes-base.editImage",
+      "position": [
+        432,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "2462bfc9-c2da-4a57-9bf4-4a924f6d765b"
+    },
+    {
+      "parameters": {
+        "url": "https://www.needpix.com/file_download.php?url=//storage.needpix.com/thumbs/newspaper-412809_1280.jpg",
+        "responseFormat": "file",
+        "options": {}
+      },
+      "name": "Read File URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        240,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "6a5326b8-e12a-43f5-ba01-c7c39d8c3f86"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read File URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read File URL": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "6ee37224-07e0-433c-b76e-7e7551752730",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-28T07:28:59.483Z",
+      "createdAt": "2026-01-28T07:28:59.483Z",
+      "role": "workflow:owner",
+      "workflowId": "8UBvWFUpsYcBYjA4A-JRS",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
