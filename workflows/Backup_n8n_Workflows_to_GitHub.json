@@ -1,0 +1,610 @@
+{
+  "updatedAt": "2026-07-21T03:18:28.206Z",
+  "createdAt": "2026-07-21T02:59:35.562Z",
+  "id": "O0Q4vtVADi4poUpE",
+  "name": "Backup n8n Workflows to GitHub",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 2
+            }
+          ]
+        }
+      },
+      "id": "8069550b-b975-4a83-b2d6-1d490ef448c8",
+      "name": "Daily Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1344,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "ee4b722f-ebb1-4191-beca-ee7192506631",
+      "name": "Get All Workflows",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        144
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "SYaFd3PggBJZ8U4E",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map((item) => {\n  const wf = item.json;\n  const base = (wf.name || ('workflow_' + wf.id))\n    .replace(/[^a-zA-Z0-9-_ ]/g, '_')\n    .replace(/\\s+/g, '_')\n    .replace(/_+/g, '_')\n    .replace(/^_+|_+$/g, '');\n  const fileName = base + '.json';\n  return {\n    json: {\n      name: wf.name || String(wf.id),\n      fileName,\n      filePath: 'workflows/' + fileName,\n      content: JSON.stringify(wf, null, 2),\n    },\n  };\n});"
+      },
+      "id": "5cad82a6-2219-4a20-8d38-609d365d8751",
+      "name": "Prepare Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ethan660"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "n8n-backups"
+        },
+        "filePath": "={{ $json.filePath }}",
+        "asBinaryProperty": false,
+        "additionalParameters": {
+          "reference": "main"
+        }
+      },
+      "id": "ef572c1e-3866-49e9-bcc9-8925dfb8e174",
+      "name": "Get Existing File",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        144
+      ],
+      "webhookId": "f4ef13eb-d7c7-4a25-bda1-e509892e8eff",
+      "credentials": {
+        "githubApi": {
+          "id": "zDuMRyIT4VpdJ11z",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const gh = $json;\nconst prep = $('Prepare Files').item.json;\nconst existing = gh.content ? Buffer.from(gh.content, 'base64').toString('utf8') : '';\nconst changed = existing.trim() !== String(prep.content).trim();\nreturn {\n  json: {\n    changed,\n    name: prep.name,\n    fileName: prep.fileName,\n    filePath: prep.filePath,\n    newContent: prep.content,\n  },\n};"
+      },
+      "id": "a29612af-c2f4-4caa-b38e-2ce12b5a35e9",
+      "name": "Detect Changes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "changed",
+              "leftValue": "={{ $json.changed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ca5c5664-7097-45a8-a3f4-6284c7d9d984",
+      "name": "Content Changed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -224,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ethan660"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "n8n-backups"
+        },
+        "filePath": "={{ $json.filePath }}",
+        "fileContent": "={{ $json.newContent }}",
+        "commitMessage": "=Backup (update): {{ $json.name }} — {{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "main"
+          }
+        }
+      },
+      "id": "7fa74d5c-fc91-4d2f-b8fa-be5969521389",
+      "name": "Update File",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "34366383-210c-45a8-8a30-05f7504a5d8e",
+      "credentials": {
+        "githubApi": {
+          "id": "zDuMRyIT4VpdJ11z",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s",
+              "name": "status",
+              "value": "updated",
+              "type": "string"
+            },
+            {
+              "id": "n",
+              "name": "name",
+              "value": "={{ $('Prepare Files').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f",
+              "name": "file",
+              "value": "={{ $('Prepare Files').item.json.filePath }}",
+              "type": "string"
+            },
+            {
+              "id": "e",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e01ca471-c059-4483-b1ef-b71d3a1cf831",
+      "name": "Mark Updated",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s",
+              "name": "status",
+              "value": "failed",
+              "type": "string"
+            },
+            {
+              "id": "n",
+              "name": "name",
+              "value": "={{ $('Prepare Files').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f",
+              "name": "file",
+              "value": "={{ $('Prepare Files').item.json.filePath }}",
+              "type": "string"
+            },
+            {
+              "id": "e",
+              "name": "error",
+              "value": "GitHub commit failed — see execution log",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cfd88423-d62d-4a1e-be66-f35c76f7c212",
+      "name": "Mark Failed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s",
+              "name": "status",
+              "value": "unchanged",
+              "type": "string"
+            },
+            {
+              "id": "n",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f",
+              "name": "file",
+              "value": "={{ $json.filePath }}",
+              "type": "string"
+            },
+            {
+              "id": "e",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "06293f63-025f-44d2-9be1-eb2211870829",
+      "name": "Mark Unchanged",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "ethan660"
+        },
+        "repository": {
+          "__rl": true,
+          "mode": "name",
+          "value": "n8n-backups"
+        },
+        "filePath": "={{ $('Prepare Files').item.json.filePath }}",
+        "fileContent": "={{ $('Prepare Files').item.json.content }}",
+        "commitMessage": "=Backup (create): {{ $(\"Prepare Files\").item.json.name }} — {{ $now.toFormat(\"yyyy-MM-dd HH:mm\") }}",
+        "additionalParameters": {
+          "branch": {
+            "branch": "main"
+          }
+        }
+      },
+      "id": "061aabbf-0d62-4c2e-a5e3-75edd7b7ebe1",
+      "name": "Create File",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        576
+      ],
+      "webhookId": "b1d460f4-877a-4f00-8287-235b9a4a1605",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s",
+              "name": "status",
+              "value": "created",
+              "type": "string"
+            },
+            {
+              "id": "n",
+              "name": "name",
+              "value": "={{ $('Prepare Files').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "f",
+              "name": "file",
+              "value": "={{ $('Prepare Files').item.json.filePath }}",
+              "type": "string"
+            },
+            {
+              "id": "e",
+              "name": "error",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e9bedf96-3255-461b-a015-7d8d9e01f053",
+      "name": "Mark Created",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map((i) => i.json);\nconst by = (s) => rows.filter((r) => r.status === s);\nconst created = by('created');\nconst updated = by('updated');\nconst unchanged = by('unchanged');\nconst failed = by('failed');\nconst ok = failed.length === 0;\nconst stamp = $now.toFormat('yyyy-MM-dd HH:mm');\nconst line = (r) => '<li>' + r.name + ' <code>' + r.file + '</code>' + (r.error ? ' — ' + r.error : '') + '</li>';\nconst section = (title, arr) => arr.length ? ('<h3>' + title + ' (' + arr.length + ')</h3><ul>' + arr.map(line).join('') + '</ul>') : '';\nconst subject = (ok ? '✅' : '⚠️') + ' n8n backup ' + (ok ? 'succeeded' : 'had failures') + ' — ' + stamp;\nconst html = [\n  '<h2>n8n → GitHub backup</h2>',\n  '<p><b>' + rows.length + '</b> workflows processed at ' + stamp + '.</p>',\n  '<p>Created: ' + created.length + ' · Updated: ' + updated.length + ' · Unchanged: ' + unchanged.length + ' · Failed: ' + failed.length + '</p>',\n  section('Failed', failed),\n  section('Created', created),\n  section('Updated', updated),\n  section('Unchanged', unchanged),\n].join('');\nreturn [{ json: { subject, html, ok, total: rows.length, created: created.length, updated: updated.length, unchanged: unchanged.length, failed: failed.length } }];"
+      },
+      "id": "a565b045-be6c-410d-a0c5-f67810c457f4",
+      "name": "Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "ethan1ethan95@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "555b7ffd-e6bb-477f-8a35-6aa449e75475",
+      "name": "Send Summary Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        288
+      ],
+      "webhookId": "06d9df04-6001-4201-b1a9-878384add751"
+    }
+  ],
+  "connections": {
+    "Daily Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get All Workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Workflows": {
+      "main": [
+        [
+          {
+            "node": "Prepare Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Files": {
+      "main": [
+        [
+          {
+            "node": "Get Existing File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Existing File": {
+      "main": [
+        [
+          {
+            "node": "Detect Changes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Changes": {
+      "main": [
+        [
+          {
+            "node": "Content Changed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Changed?": {
+      "main": [
+        [
+          {
+            "node": "Update File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Unchanged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update File": {
+      "main": [
+        [
+          {
+            "node": "Mark Updated",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Updated": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Failed": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Unchanged": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create File": {
+      "main": [
+        [
+          {
+            "node": "Mark Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Created": {
+      "main": [
+        [
+          {
+            "node": "Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Summary": {
+      "main": [
+        [
+          {
+            "node": "Send Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "1c1ae7e5-0291-402b-b291-9a1fe805a187",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-21T02:59:35.562Z",
+      "createdAt": "2026-07-21T02:59:35.562Z",
+      "role": "workflow:owner",
+      "workflowId": "O0Q4vtVADi4poUpE",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
