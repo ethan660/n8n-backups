@@ -1,0 +1,33 @@
+{
+  "updatedAt": "2026-07-14T06:48:55.607Z",
+  "createdAt": "2026-07-14T02:45:32.847Z",
+  "id": "SPYwc5ZjYU4Jxrj3",
+  "name": "MN dental receptionist speed to lead",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4b04bc61-daef-422f-83c3-87e543c6d1ae",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T02:45:32.847Z",
+      "createdAt": "2026-07-14T02:45:32.847Z",
+      "role": "workflow:owner",
+      "workflowId": "SPYwc5ZjYU4Jxrj3",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
