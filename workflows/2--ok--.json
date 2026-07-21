@@ -1,0 +1,706 @@
+{
+  "updatedAt": "2026-07-06T07:44:13.755Z",
+  "createdAt": "2026-01-30T01:37:18.258Z",
+  "id": "4BrYzzzZxGcgrFIl75_sr",
+  "name": "爆款风格分析2--ok--可以测试",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "style_analysis",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Access-Control-Allow-Credentials",
+                "value": "true"
+              },
+              {
+                "name": "Access-Control-Allow-Methods",
+                "value": "GET,POST,PUT,OPTIONS,DELETE"
+              },
+              {
+                "name": "Access-Control-Allow-Headers",
+                "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+              },
+              {
+                "name": "Cache-Control",
+                "value": "no-store, no-cache, must-revalidate, max-age=0"
+              },
+              {
+                "name": "Connection",
+                "value": "keep-alive"
+              },
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              },
+              {
+                "name": "Expires",
+                "value": "0"
+              },
+              {
+                "name": "Pragma",
+                "value": "no-cache"
+              },
+              {
+                "name": "Transfer-Encoding",
+                "value": "chunked"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        864
+      ],
+      "id": "5b7d5fb5-d37c-4482-bcb9-d9d81841e080",
+      "name": "Webhook",
+      "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+    },
+    {
+      "parameters": {
+        "operation": "resize",
+        "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+        "resizeOption": "onlyIfLarger",
+        "options": {
+          "format": "webp"
+        }
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        896,
+        864
+      ],
+      "id": "2b8782d4-4bee-4dbf-8efc-6332e8dadd4c",
+      "name": "Edit Image1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 当 Mode 为 \"Run Once for All Items\" 时，输入是一个名为 $input.all() 的数组\nconst allItems = $input.all();\n\n// 处理每一项数据（通常 Chat Trigger 只有 1 个 Item）\nreturn allItems.map(item => {\n  const newBinary = {};\n  \n  // 获取当前 item 中所有的二进制键名 (例如: data0, data1)\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  // 按照你的要求，提取前 3 张并重命名\n  binaryKeys.slice(0, 3).forEach((key, index) => {\n    newBinary[`image_${index}`] = item.binary[key];\n  });\n  \n  // 返回符合 n8n 规范的结构\n  return {\n    json: item.json,\n    binary: newBinary\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        864
+      ],
+      "id": "523166bf-764c-4392-9bfb-bd73791c23b0",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=$binary",
+        "options": {
+          "includeBinary": true
+        }
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        640,
+        864
+      ],
+      "id": "baadeef0-142a-455b-8168-ba3d262a7c43",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst getChatInput = () => {\n  try {\n    const n = $('Code in JavaScript4').first();\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\nconst base64_list = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin).filter(k =>\n    k.startsWith('image') || k.startsWith('data') || k.startsWith('file') || k.startsWith('webp')\n  );\n\n  for (const key of keys) {\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n    if (b64) base64_list.push(b64);\n  }\n}\n\nreturn [{\n  json: {\n    chatInput,\n    base64_list\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        864
+      ],
+      "id": "c459ffba-39b5-4d02-9198-2fa9f725ae52",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2416,
+        672
+      ],
+      "id": "7b2b6516-bfc1-430f-8cb1-5b606abd93f2",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"[Role]你是一位拥有10年经验的亚马逊资深视觉创意总监，精通美国市场消费心理学与电商转化率（CVR）视觉设计。# Task请分析用户提供的产品背景信息（目标市场、平台、卖点等），为该产品量身定制 4 种电商详情页设计风格建议。# Output Strategy你的分析需要基于以下审美逻辑：1. 市场契合度：根据目标市场偏好的偏好，从明亮、高对比度、真实且具有代入感的画面等方向考虑。2. 产品特性：例如（针对仿真花，重点在于“去塑料感”、“生命力”与“空间氛围”）。# Output Format (Strictly Follow)输出必须严格遵守以下格式，每行一个风格，不要包含任何前导词、解释或多余符号：风格名称1：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称2：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称3：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称4：简短的描述，#791c1c, #FFFFFF, #EAEAEA各种风格[提供 3 个 Hex 颜色代码，例如 #791c1c, #FFFFFF, #EAEAEA]# Example始终用，中文输出温馨居家：营造居家舒适氛围。#791c1c, #FFFFFF, #EAEAEA。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $json.chatInput }}\"\n        },\n        {{ $json.base64_list.map(base64 => `{\n          \"inline_data\": {\n            \"mime_type\": \"image/webp\",\n            \"data\": \"${base64}\"\n          }\n        }`).join(',') }}\n      ]\n    }\n  ]\n}",
+        "options": {
+          "proxy": "",
+          "timeout": 300000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1728,
+        672
+      ],
+      "id": "05612014-4e31-443b-87ac-08f8eb57be3c",
+      "name": "HTTP gemini-2.2",
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst collectPrompts = () => {\n  const out = [];\n  for (const it of items) {\n    // 1. 定位 Gemini 返回的核心文本\n    const text = it.json?.candidates?.[0]?.content?.parts?.[0]?.text;\n    let s = toStr(text);\n\n    if (s) {\n      // 2. 移除开头的 Markdown JSON 标记和方括号\n      s = s.replace(/^```json\\s*\\[?\\n?/, '') \n           .replace(/\\n?\\]?\\s*```$/, '')      \n           .trim();\n\n      // 3. 彻底清除换行符和各种斜杠\n      s = s.replace(/\\\\n/g, ' ')   // 清理转义换行\n           .replace(/\\n/g, ' ')     // 清理常规换行\n           .replace(/\\/n/g, ' ')    // 清理正斜杠换行\n           .replace(/\\\\/g, '')      // 移除所有反斜杠 \\\n           .replace(/\\//g, ' ');    // 移除所有正斜杠 / (替换为空格以防单词粘连)\n\n      // 4. 清理残留的引号标记（可选，如果 AI 输出带引号的话）\n      s = s.replace(/\\\"/g, '');\n\n      // 5. 压缩多余空格\n      s = s.replace(/\\s+/g, ' ').trim();\n\n      out.push(s);\n    }\n  }\n  return Array.from(new Set(out));\n};\n\nconst prompts = collectPrompts();\n\n// 最终输出\nreturn [{\n  json: {\n    prompt: prompts[0] || \"\" \n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        672
+      ],
+      "id": "5dd42228-0f3b-4307-8ba2-a077c78d84e2",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d72e0da8-79fe-4b55-bfd0-8ed9d782f87c",
+              "leftValue": "={{ Object.keys($binary)[0] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        864
+      ],
+      "id": "815668d4-52a6-41ca-9e4e-aa3abe54c4ac",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        576
+      ],
+      "id": "3478e74d-e3b2-48eb-96ba-163987bd26c1",
+      "name": "Respond to Webhook3"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Edit Image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "HTTP gemini-2.2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP gemini-2.2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "75fb8c14-ebbe-4333-8161-2b77e2522f5d",
+  "activeVersionId": "9a231dcd-a6cf-4cd6-8d43-972928ec820c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-01-30T01:37:18.258Z",
+      "createdAt": "2026-01-30T01:37:18.258Z",
+      "role": "workflow:owner",
+      "workflowId": "4BrYzzzZxGcgrFIl75_sr",
+      "projectId": "ab6D8dFMpUWSaNjq"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-30T08:41:28.369Z",
+    "createdAt": "2026-01-30T08:35:49.708Z",
+    "versionId": "9a231dcd-a6cf-4cd6-8d43-972928ec820c",
+    "workflowId": "4BrYzzzZxGcgrFIl75_sr",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "style_analysis",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*",
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "name": "Access-Control-Allow-Credentials",
+                  "value": "true"
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "value": "GET,POST,PUT,OPTIONS,DELETE"
+                },
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "value": "Authorization,x-requested-with, Referer,content-type,DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type, Accept-Language, Origin, Accept-Encoding, Group,X-Params-Encrypted,X-Data-Encrypted"
+                },
+                {
+                  "name": "Cache-Control",
+                  "value": "no-store, no-cache, must-revalidate, max-age=0"
+                },
+                {
+                  "name": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "text/html; charset=UTF-8"
+                },
+                {
+                  "name": "Expires",
+                  "value": "0"
+                },
+                {
+                  "name": "Pragma",
+                  "value": "no-cache"
+                },
+                {
+                  "name": "Transfer-Encoding",
+                  "value": "chunked"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -112,
+          864
+        ],
+        "id": "5b7d5fb5-d37c-4482-bcb9-d9d81841e080",
+        "name": "Webhook",
+        "webhookId": "5fdc2360-dbc7-4c6f-8ce9-c4115b9aa058"
+      },
+      {
+        "parameters": {
+          "operation": "resize",
+          "dataPropertyName": "={{ Object.keys($binary)[0] }}",
+          "resizeOption": "onlyIfLarger",
+          "options": {
+            "format": "webp"
+          }
+        },
+        "type": "n8n-nodes-base.editImage",
+        "typeVersion": 1,
+        "position": [
+          896,
+          864
+        ],
+        "id": "2b8782d4-4bee-4dbf-8efc-6332e8dadd4c",
+        "name": "Edit Image1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 当 Mode 为 \"Run Once for All Items\" 时，输入是一个名为 $input.all() 的数组\nconst allItems = $input.all();\n\n// 处理每一项数据（通常 Chat Trigger 只有 1 个 Item）\nreturn allItems.map(item => {\n  const newBinary = {};\n  \n  // 获取当前 item 中所有的二进制键名 (例如: data0, data1)\n  const binaryKeys = Object.keys(item.binary || {});\n  \n  // 按照你的要求，提取前 3 张并重命名\n  binaryKeys.slice(0, 3).forEach((key, index) => {\n    newBinary[`image_${index}`] = item.binary[key];\n  });\n  \n  // 返回符合 n8n 规范的结构\n  return {\n    json: item.json,\n    binary: newBinary\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          192,
+          864
+        ],
+        "id": "523166bf-764c-4392-9bfb-bd73791c23b0",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "=$binary",
+          "options": {
+            "includeBinary": true
+          }
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          640,
+          864
+        ],
+        "id": "baadeef0-142a-455b-8168-ba3d262a7c43",
+        "name": "Split Out1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst getChatInput = () => {\n  try {\n    const n = $('Code in JavaScript4').first();\n    return toStr(n?.json?.chatInput);\n  } catch (_) {\n    return '';\n  }\n};\n\nconst chatInput = getChatInput();\nconst base64_list = [];\n\nfor (let i = 0; i < items.length; i++) {\n  const bin = items[i].binary || {};\n  const keys = Object.keys(bin).filter(k =>\n    k.startsWith('image') || k.startsWith('data') || k.startsWith('file') || k.startsWith('webp')\n  );\n\n  for (const key of keys) {\n    const buf = await this.helpers.getBinaryDataBuffer(i, key);\n    const b64 = Buffer.isBuffer(buf) ? buf.toString('base64') : Buffer.from(buf).toString('base64');\n    if (b64) base64_list.push(b64);\n  }\n}\n\nreturn [{\n  json: {\n    chatInput,\n    base64_list\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1168,
+          864
+        ],
+        "id": "c459ffba-39b5-4d02-9198-2fa9f725ae52",
+        "name": "Code in JavaScript6"
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          2416,
+          672
+        ],
+        "id": "7b2b6516-bfc1-430f-8cb1-5b606abd93f2",
+        "name": "Respond to Webhook1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyAiFyELcCgOENI8-Q5sqMh6Z-pBMRWVlbk",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"[Role]你是一位拥有10年经验的亚马逊资深视觉创意总监，精通美国市场消费心理学与电商转化率（CVR）视觉设计。# Task请分析用户提供的产品背景信息（目标市场、平台、卖点等），为该产品量身定制 4 种电商详情页设计风格建议。# Output Strategy你的分析需要基于以下审美逻辑：1. 市场契合度：根据目标市场偏好的偏好，从明亮、高对比度、真实且具有代入感的画面等方向考虑。2. 产品特性：例如（针对仿真花，重点在于“去塑料感”、“生命力”与“空间氛围”）。# Output Format (Strictly Follow)输出必须严格遵守以下格式，每行一个风格，不要包含任何前导词、解释或多余符号：风格名称1：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称2：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称3：简短的描述，#791c1c, #FFFFFF, #EAEAEA风格名称4：简短的描述，#791c1c, #FFFFFF, #EAEAEA各种风格[提供 3 个 Hex 颜色代码，例如 #791c1c, #FFFFFF, #EAEAEA]# Example始终用，中文输出温馨居家：营造居家舒适氛围。#791c1c, #FFFFFF, #EAEAEA。\"\n        },\n        {\n          \"text\": \"以下是用户提供的产品背景文字信息：\\n{{ $json.chatInput }}\"\n        },\n        {{ $json.base64_list.map(base64 => `{\n          \"inline_data\": {\n            \"mime_type\": \"image/webp\",\n            \"data\": \"${base64}\"\n          }\n        }`).join(',') }}\n      ]\n    }\n  ]\n}",
+          "options": {
+            "timeout": 300000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1728,
+          672
+        ],
+        "id": "05612014-4e31-443b-87ac-08f8eb57be3c",
+        "name": "HTTP gemini-2.2",
+        "retryOnFail": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst toStr = (v) => (v == null ? '' : String(v).trim());\n\nconst collectPrompts = () => {\n  const out = [];\n  for (const it of items) {\n    // 1. 定位 Gemini 返回的核心文本\n    const text = it.json?.candidates?.[0]?.content?.parts?.[0]?.text;\n    let s = toStr(text);\n\n    if (s) {\n      // 2. 移除开头的 Markdown JSON 标记和方括号\n      s = s.replace(/^```json\\s*\\[?\\n?/, '') \n           .replace(/\\n?\\]?\\s*```$/, '')      \n           .trim();\n\n      // 3. 彻底清除换行符和各种斜杠\n      s = s.replace(/\\\\n/g, ' ')   // 清理转义换行\n           .replace(/\\n/g, ' ')     // 清理常规换行\n           .replace(/\\/n/g, ' ')    // 清理正斜杠换行\n           .replace(/\\\\/g, '')      // 移除所有反斜杠 \\\n           .replace(/\\//g, ' ');    // 移除所有正斜杠 / (替换为空格以防单词粘连)\n\n      // 4. 清理残留的引号标记（可选，如果 AI 输出带引号的话）\n      s = s.replace(/\\\"/g, '');\n\n      // 5. 压缩多余空格\n      s = s.replace(/\\s+/g, ' ').trim();\n\n      out.push(s);\n    }\n  }\n  return Array.from(new Set(out));\n};\n\nconst prompts = collectPrompts();\n\n// 最终输出\nreturn [{\n  json: {\n    prompt: prompts[0] || \"\" \n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2016,
+          672
+        ],
+        "id": "5dd42228-0f3b-4307-8ba2-a077c78d84e2",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "d72e0da8-79fe-4b55-bfd0-8ed9d782f87c",
+                "leftValue": "={{ Object.keys($binary)[0] }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          416,
+          864
+        ],
+        "id": "815668d4-52a6-41ca-9e4e-aa3abe54c4ac",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"code\": 400,\n  \"msg\": \"图片不能为空\"\n}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          640,
+          592
+        ],
+        "id": "3478e74d-e3b2-48eb-96ba-163987bd26c1",
+        "name": "Respond to Webhook3"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Image1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out1": {
+        "main": [
+          [
+            {
+              "node": "Edit Image1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript6": {
+        "main": [
+          [
+            {
+              "node": "HTTP gemini-2.2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP gemini-2.2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Split Out1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "Nice Nice",
+    "name": "Version 9a231dcd",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
